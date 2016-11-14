@@ -1,8 +1,9 @@
 """Library and CLI tools for interacting with RFlink 433MHz transceiver."""
 
-from setuptools import setup, find_packages
 from codecs import open
 from os import path
+
+from setuptools import find_packages, setup
 
 here = path.abspath(path.dirname(__file__))
 
@@ -50,7 +51,10 @@ setup(
 
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
 
-    # install_requires=[''],
+    install_requires=[
+        'docopt',
+        'pyserial-asyncio',
+    ],
 
     # # List additional groups of dependencies here (e.g. development
     # # dependencies). You can install these using the following syntax,
