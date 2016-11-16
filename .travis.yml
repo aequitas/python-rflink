@@ -11,13 +11,13 @@ matrix:
   - python: 2.7
   - python: pypy3
   include:
-    - python: pypy3
-      install: pip install tox-travis asyncio
+  - python: pypy3
+    install: pip install tox-travis asyncio
 deploy:
   provider: pypi
   user: aequitas
   password:
-    secure: mMEurun9eAGn7Mtk9Rc6fwy82o3VFZJ8rQKy/w8NkRaFd3EYk3PsXv/bk8X1EjkuWCwNL700IJzj0NGyFI8/P367LW8MgbwywEPB0dGBxv+ttBy94hblfLYPGhtao1c7opZc8as7zpT/piSHzOd3UXzceHmupu+xG7pdzI74OIh0rh1HJ7mqf3vSjGAufS3knXBbAM1EW3obFfvJ3hT3uUZGlkgdXDKBLh/kpO5cinM/OwsogTrO0emYq8qKxcsku/8t15EHH5A7SQ5GuFoYGDNb4ubB1vmbKcgMdqEbE2Xaqb5q8sP7+YTuDNfsBw04SZpZsfFU6tVwIMiPgDl/bqcOuG1dAgbc7c0fYRi2eh+gq8K9tiudTR7j4XL2NhZcU5zY+VZT3c1LP+ZbUfc33zfL/Xzagep+mu1Spo6YkzTJ8P+v8x4AcMC7dPbH3AIZCkAj3RDUXW4wykGbELSPt9DuD+ZssNZfNi9xzpgWARpvDQ8/eX9twq7kuJBLoJaT8fi1Pu0QQ9HWdlQbPUj8Dohl+YOjZZFr9hG0lW42W1imHtC2sdkIU6byuySe1MjbedweENfeqmamCQ6z0BCw+MCZRs3JCO1ffwoQix9SCsIZCbFS2JEU+cvqk34gV3oBozByLf2DpHIU5FIsTgFxdenb3BUB2KQw9rHZb1WjdJ8=
+    secure: Eh5fmN851Kcm3PvWHoLb/UsSjVF2h6xIxYdr8CmgHU5vOJVDgpV4GTs/lIl5Ko/fLMzGY/SSj8NWZWcv/qU4wibiTL0f4et6wAX5E6RS6E3eNtMn5HL1b0JMHgAaZN9RFY9GEw7/KhLg+sI6OaOAXUUTbBYRfTgZD3t2yFoNZR8TqIuQOVhQojngzDDtZS2hXdBciwbOezRsbgLVOWUhXGKKrMyRI88/FXzvyw0srfsHUIoFPosW/PS1Qhm8reoO1eg9TpKUMSZ7K/2kqQ6F2St2j3C0V7CGUnFSZqFS9rrcQKZYcckjKflGAK//C8ai3/vDXX/lIdj6oMBjBdONdVw2xVlReebTAt9Q2JAzHUEu4aFbHUvXkHG5CKJIZBBOP+Ujw9iSZKfwTNb85g0CynXS9EWouqWlii9uWyfzqhloA2+txuRhtEB28bdbIdBlntxWELEXQvqrgd/jOamKNilsnn7Wy6cG3jMEWXr5GsxdGsvw2R2LsFlPd3q6FmbnqKiqD5S3CHh9qEk8tBm/pZu49nMoFIpSpMc2rce8U5Th3DKsPa7gY7pAsHg5ebIB5K0neDildcp0nxIn1BxbFfaZAoDGZT0+cIRAOW4bNqM69B3jOQQOvG3gtsyl0bZHkamUWO2nM5d7SZ5tsSC5+KHV+jPRS5CjdDcXnl4a4H8=
   on:
     tags: true
     distributions: sdist bdist_wheel
