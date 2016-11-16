@@ -10,6 +10,9 @@ matrix:
   allow_failures:
   - python: 2.7
   - python: pypy3
+  include:
+    - python: pypy3
+      install: pip install tox-travis asyncio
 deploy:
   provider: pypi
   user: aequitas
