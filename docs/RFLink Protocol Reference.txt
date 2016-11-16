@@ -1,0 +1,215 @@
+RFLink Gateway Commands and Data fields
+
+The use of this protocol is free for both server and client sides of the implementation
+Data is send serial (via USB) as "text" at a speed of 57600 baud (N,8,1)
+It is sufficient to open a port and listen to the data.
+Each text line contains information that has been received via RF signals.
+ 
+
+Packet structure - Received data from RF:
+-----------------------------------------
+20;02;Name;ID=9999;LABEL=data;
+
+20          => Node number 20 means from the RFLink Gateway to the master, 10 means from the master to the RFLink Gateway
+               Node number 11 means from the master to the master (Echo command - creation of devices), see below for explanation   
+;           => field separator
+02          => packet counter (goes from 00-FF)
+NAME        => Device / Protocol name (can be used to display in applications etc.)
+ID=9999     => Device ID (often a rolling code and/or device channel number) (Hexadecimal)
+LABEL=data  => Data fields, contains the field type and value for that field, can be present multiple times per device.
+
+
+Data Fields:  (LABEL=data)
+------------
+ID=9999         => Device ID (often a rolling code and/or device channel number) (Hexadecimal)
+SWITCH=A16      => House/Unit code like A1, P2, B16 or a button number etc.
+CMD=ON          => Command (ON/OFF/ALLON/ALLOFF) Additional for Milight: DISCO+/DISCO-/MODE0 - MODE8
+SET_LEVEL=15    => Direct dimming level setting value (decimal value: 0-15)
+TEMP=9999       => Temperature (hexadecimal), high bit contains negative sign, needs division by 10 (0xC0 = 192 decimal = 19.2 degrees) 
+HUM=99          => Humidity (decimal value: 0-100 to indicate relative humidity in %)
+BARO=9999       => Barometric pressure (hexadecimal) 
+HSTATUS=99      => 0=Normal, 1=Comfortable, 2=Dry, 3=Wet
+BFORECAST=99    => 0=No Info/Unknown, 1=Sunny, 2=Partly Cloudy, 3=Cloudy, 4=Rain
+UV=9999         => UV intensity (hexadecimal)
+LUX=9999        => Light intensity (hexadecimal)
+BAT=OK          => Battery status indicator (OK/LOW)
+RAIN=1234       => Total rain in mm. (hexadecimal)  0x8d = 141 decimal = 14.1 mm  (needs division by 10)
+RAINRATE=1234   => Rain rate in mm. (hexadecimal)   0x8d = 141 decimal = 14.1 mm  (needs division by 10)
+RAINTOT=1234    => Total rain (per 24 hours) in mm. (hexadecimal)  0x8d = 141 decimal = 14.1 mm  (needs division by 10)
+                   Only reported by a very limited number of sensors
+WINSP=9999      => Wind speed in km. p/h (hexadecimal) needs division by 10 
+AWINSP=9999     => Average Wind speed in km. p/h (hexadecimal) needs division by 10 
+WINGS=9999      => Wind Gust in km. p/h (hexadecimal)
+WINDIR=0123     => Wind direction (integer value from 0-15) reflecting 0-360 degrees in 22.5 degree steps
+WINCHL          => wind chill (hexadecimal, see TEMP)
+WINTMP=1234     => Wind meter temperature reading (hexadecimal, see TEMP)
+CHIME=123       => Chime/Doorbell melody number
+SMOKEALERT=ON   => ON/OFF
+PIR=ON          => ON/OFF
+CO2=1234        => CO2 air quality
+SOUND=1234      => Noise level
+KWATT=9999      => KWatt (hexadecimal)
+WATT=9999       => Watt (hexadecimal)
+CURRENT=1234    => Current phase 1
+CURRENT2=1234   => Current phase 2 (CM113)   
+CURRENT3=1234   => Current phase 3 (CM113)   
+DIST=1234       => Distance
+METER=1234      => Meter values (water/electricity etc.)
+VOLT=1234       => Voltage
+RGBW=9999       => Milight: provides 1 byte color and 1 byte brightness value
+
+Sample data of received RF packets:
+-----------------------------------
+20;2D;UPM/Esic;ID=0001;TEMP=00cf;HUM=16;BAT=OK;
+20;6A;UPM/Esic;ID=1002;WINSP=0041;WINDIR=0001;BAT=OK;
+20;08;UPM/Esic;ID=1003;RAIN=0010;BAT=OK;
+20;31;Mebus;ID=c201;TEMP=00cf;
+20;32;Auriol;ID=008f;TEMP=00d3;BAT=OK;
+20;A2;Auriol V2;ID=008f;TEMP=00a3;BAT=LOW;
+20;33;Cresta;ID=3001;TEMP=00b0;HUM=50;
+20;0C;Cresta;ID=8001;RAIN=001c;
+20;47;Cresta;ID=8001;WINDIR=0002;WINSP=0060;WINGS=0088;WINCHL=b0;
+20;47;Cresta;ID=8001;TEMP=00b0;UV=00d0;
+20;36;Alecto V1;ID=ec02;TEMP=00d1;HUM=14;
+20;07;Mebus;ID=ea01;TEMP=0017;
+20;3D;Alecto V1;ID=2000;TEMP=0011;HUM=61;
+20;26;Alecto V1;ID=0086;RAIN=02ac;
+20;30;Alecto V1;ID=0020;WINSP=0068;
+20;16;Alecto V1;ID=0020;WINSP=0020;
+20;17;Alecto V1;ID=0020;WINDIR=0002;WINGS=0088;
+20;36;Alecto V1;ID=0020;WINDIR=0002;WINGS=0040;
+20;74;Oregon TempHygro;ID=0ACC;TEMP=00be;HUM=40;BAT=OK;
+20;b3;Oregon TempHygro;ID=1a2d;TEMP=00dd;HUM=43;BAT=OK;
+20;e5;Oregon BTHR;ID=5a6d;TEMP=00be;HUM=40;BARO=03d7;BAT=OK;
+20;46;Oregon Rain;ID=2a1d;RAIN=0012;RAINTOT=0012;BAT=OK;
+20;83;Oregon Rain2;ID=2a19;RAIN=002a;RAINTOT=0054;BAT=OK;
+20;32;Oregon Wind;ID=1a89;WINDIR=0015;WINSP=0068;AWINSP=0050;BAT=OK;
+20;4a;Oregon Wind2;ID=3a0d;WINDIR=0002;WINSP=0040;AWINSP=005a;BAT=OK;
+20;ba;Oregon UVN128/138;ID=ea7c;UV=0030;BAT=OK;
+20;AF;SelectPlus;ID=1bb4;CHIME=01;
+20;FC;Plieger York;ID=dd01;CHIME=02;
+20;47;Byron SX;ID=a66a;CHIME=09;
+20;12;Pir;ID=aa66;PIR=ON;
+20;63;SmokeAlert;ID=123456;SMOKEALERT=ON;
+20;06;Kaku;ID=41;SWITCH=1;CMD=ON;
+20;0C;Kaku;ID=41;SWITCH=2;CMD=OFF;
+20;0D;Kaku;ID=41;SWITCH=2;CMD=ON;
+20;46;Kaku;ID=44;SWITCH=4;CMD=OFF;
+20;E0;NewKaku;ID=cac142;SWITCH=1;CMD=ALLOFF;
+20;3B;NewKaku;ID=cac142;SWITCH=3;CMD=OFF;
+20;0B;NewKaku;ID=000005;SWITCH=2;CMD=ON;
+20;0E;NewKaku;ID=000005;SWITCH=2;CMD=OFF;
+20;12;NewKaku;ID=000002;SWITCH=2;CMD=OFF;
+20;1E;NewKaku;ID=00000a;SWITCH=2;CMD=OFF;
+20;1F;NewKaku;ID=00000a;SWITCH=2;CMD=ON;
+20;01;NewKaku;ID=000007;SWITCH=2;CMD=OFF;
+20;04;NewKaku;ID=000007;SWITCH=2;CMD=ON;
+20;04;NewKaku;ID=000007;SWITCH=2;CMD=SET_LEVEL=14; 
+20;0C;HomeEasy;ID=7900b200;SWITCH=0b;CMD=ALLON;
+20;AD;FA500;ID=0d00b900;SWITCH=0001;CMD=UNKOWN;
+20;AE;FA500;ID=0a01;SWITCH=0a01;CMD=OFF;
+20;03;Eurodomest;ID=03696b;SWITCH=00;CMD=OFF;
+20;04;Eurodomest;ID=03696b;SWITCH=07;CMD=ALLOFF;
+20;41;Conrad RSL2;ID=010002;SWITCH=03;CMD=ON;
+20;47;Blyss;ID=ff98;SWITCH=A1;CMD=ON;
+20;73;Kambrook;ID=010203;SWITCH=A1;CMD=OFF;
+20;39;RTS;ID=1a602a;SWITCH=01;CMD=DOWN;
+20;01;MiLightv1;ID=F746;SWITCH=00;RGBW=3c00;CMD=ON;
+20;05;MySensors;ID=04;TEMP=00d8;
+20;06;MySensors;ID=04;HUM=50;
+
+Note that for sensors that only report values like temperature, only the data and the ID are required.
+Name labels can be thrown away or used for cosmetic purposes.
+
+For switches, the protocol name has to be stored and re-used on the transmission side.
+Thus, when a remote control is used to control a device data like below will be send from the RFLink Gateway over USB:
+20;3B;NewKaku;ID=cac142;SWITCH=3;CMD=OFF;
+When the state of this switch needs to be changed the following command has to be send:
+10;NewKaku;0cac142;3;ON;
+The name label (here "NewKaku") is used to tell the RFLink Gateway what protocol it has to use for the RF broadcast.
+      
+   
+Special Control Commands - Send:   
+--------------------------------   
+10;REBOOT;       => Reboot RFLink Gateway hardware   
+10;PING;         => a "keep alive" function. Is replied with: 20;99;PONG;   
+10;VERSION;      => Version and build indicator. Is replied with: 20;99;"RFLink Gateway software version";    
+10;RFDEBUG=ON;   => ON/OFF to Enable/Disable showing of RF packets. Is replied with: 20;99;RFDEBUG="state";   
+10;RFUDEBUG=ON;  => ON/OFF to Enable/Disable showing of undecoded RF packets. Is replied with: 20;99;RFUDEBUG="state";  
+10;QRFDEBUG=ON;  => ON/OFF to Enable/Disable showing of undecoded RF packets. Is replied with: 20;99;QRFDEBUG="state";   
+                    QRFDEBUG is a faster version of RFUDEBUG but all pulse times are shown in hexadecimal and need to be multiplied by 30   
+10;RTSCLEAN;     => Clean Rolling code table stored in internal EEPROM   
+10;RTSRECCLEAN=9 => Clean Rolling code record number (value from 0 - 15)   
+10;RTSSHOW;      => Show Rolling code table stored in internal EEPROM   
+10;STATUS;       => Reports the status of the various modules that can be enabled/disabled   
+                    20;B5;STATUS;setRF433=ON;NodoNRF=OFF;MilightNRF=ON;setLivingColors=ON;setAnsluta=OFF;setGPIO=OFF;   
+10;setRF433=ON   => enable/disable scanning of received 433/868 mhz signals   
+10;setGPIO=ON    => enable/disable scanning of IOPIN changes    
+10;setBLE=ON     => enable/disable scanning of Bluetooth LE signals, requires an NRF24L01 wired for Milight use, not together with Milight/MySensors   
+10;setMySensors=ON  => enable/disable scanning of MySensors signals, requires an NRF24L01 wired for Milight use, not together with Milight/BLE   
+10;setMilight=ON => enable/disable scanning of Milight RF signals, requires an NRF24L01 wired for Milight use, not together with BLE/MySensors    
+10;setNodoNRF=ON => enable/disable scanning of Nodo NRF signals, requires an NRF24L01 wired for Nodo use   
+10;setANSLUTA=ON => enable/disable scanning of Ikea Ansluta signals, requires a CC2500, not together with Livingcolors   
+10;setLIVINGCOLORS=O => enable/disable scanning of Living Colors Gen1 signals, requires a CC2500, not together with Ansluta   
+10;LicoClean;    => Erase the Living colors lamp address table 
+10;LicoShow;     => Show the Living colors lamp address table
+10;EEPClean;     => Clean all settings in EEPROM
+
+
+Packet structure - To Send data via RF:
+---------------------------------------
+10;Protocol Name;device address,button number;action; 
+
+Sample data of transmitted RF packets:
+--------------------------------------
+10;Kaku;00004d;1;OFF;       => Kaku/ARC protocol;address;action (ON/OFF)
+10;AB400D;00004d;1;OFF;     => Sartano protocol;address;action (ON/OFF)
+10;Impuls;00004d;1;OFF;     => Impuls protocol;address;action (ON/OFF)
+10;NewKaku;00c142;1;ON;     => Newkaku/AC protocol;address (24 bits);button number (hexadecimal 0x0-0x0f);action (ON/OFF/ALLON/ALLOFF/15 - 1 to 15 for direct dim level)
+10;NewKaku;128ac4d;1;OFF;   => Newkaku/AC protocol;address (28 bits);button number (hexadecimal 0x0-0x0f);action (ON/OFF/ALLON/ALLOFF/15 - 1 to 15 for direct dim level)
+10;Eurodomest;123456;01;ON; => Eurodomest protocol;address;button number;action (ON/OFF/ALLON/ALLOFF)
+10;Blyss;ff98;A1;OFF;       => Blyss protocol;address;button;action (ON/OFF/ALLON/ALLOFF)
+10;Conrad;ff0607;1;OFF;     => Conrad RSL protocol, address, button number, action (ON/OFF/ALLON/ALLOFF)
+10;Kambrook;050325;a1;ON;   => Kambrook protocol, address, unit/button number, action (ON/OFF)
+10;X10;000041;1;OFF;        => X10 protocol;address;action (ON/OFF)
+10;HomeConfort;01b523;D3;ON;=> HomeConfort protocol;address;action (ON/OFF)
+10;FA500;001b523;D3;ON;     => Flamingo protocol;address;action (ON/OFF)
+10;Powerfix;000080;0;ON;    => Powerfix/Quigg/Chacon protocol;address;action (ON/OFF)
+10;Ikea Koppla;000080;0;ON; => Koppla protocol;address;action (ON/OFF) 
+10;HomeEasy;7900b100;3;ON;  => Home Easy protocol;address;action (ON/OFF/ALLON/ALLOFF)
+10;EV1527;000080;0;ON;      => EV1527 protocol;address;device 0x00-0x0f,action ON/OFF
+10;Chuango;000080;2;ON;     => Chuango Protocol;address;action (ON/OFF/ALLON/ALLOFF)
+10;Selectplus;001c33;       => SelectPlus protocol;address
+10;Byron;112233;01;OFF;     => Dyron SX protocol;address;ringtone
+10;DELTRONIC;001c33;        => Deltronic protocol;address
+10;BYRON;00009F;01;ON;      => Byron protocol;address;chime number,command
+10;FA20RF;67f570;1;ON;      => Flamingo FA20RF / FA21 / KD101 protocol, address, button number, action (ON/OFF/ALLON/ALLOFF)
+10;MERTIK;64;UP;            => Mertik protocol, address, command
+10;RTS;1a602a;0;ON;         => RTS protocol, address, command (zero is unused for now)
+10;RTS;1b602b;0123;PAIR;    => Pairing for RTS rolling code:  RTS protocol, address, rolling code number, PAIR command
+10;RTS;1b602b;0123;0;PAIR;  => Extended Pairing for RTS rolling code:  RTS protocol, address, rolling code number, eeprom record number, PAIR command
+10;MiLightv1;F746;00;3c00;ON;     => Milight v1 protocol;address;button/unit number;color & brightness;command (ON/OFF/ALLON/ALLOFF/DISCO+/DISCO-/MODE0 - MODE8 
+10;MiLightv1;F746;01;34BC;PAIR;   => Milight v1 protocol;address;button/unit number;color & brightness -not relevant-; PAIR command 
+10;MiLightv1;F746;01;34BC;UNPAIR; => Milight v1 protocol;address;button/unit number;color & brightness -not relevant-; UNPAIR command 
+10;MiLightv1;F746;01;34BC;BRIGHT; => Milight v1 protocol;address;button/unit number;color & brightness; Set brightness
+10;MiLightv1;F746;01;34BC;COLOR;  => Milight v1 protocol;address;button/unit number;color & brightness; Set color 
+
+Device creation using the Echo command (Node 11):
+-------------------------------------------------
+RFlink auto detects remote control signals and home automation software should create the device automatically.  
+However, sometimes the original remote control is not available anymore (broken/lost/etc.)  
+For this purpose Node 11 commands can be used from the home automation software.  
+The user can input a command as below:   
+   
+11;20;0B;NewKaku;ID=000005;SWITCH=2;CMD=ON; => 11; is the required node info it can be followed by any custom data which will be echoed   
+
+RFlink will reply with   
+20;D3;OK;                                   => Notifying that the command has been received   
+20;D4;NewKaku;ID=000005;SWITCH=2;CMD=ON;    => sending the data "as if" a remote control button was pressed.   
+
+The home automation software can then process the received command as any other RFlink command.
+
+More Information:
+-----------------
+If you have any questions about the protocol or require assistance with implementing the protocol on home automation software 
+then just send a mail to frankzirrone@gmail.com 

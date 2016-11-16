@@ -21,6 +21,7 @@ VALUE_TRANSLATION = {
     'hum': int,
 }
 
+
 def parse_packet(packet):
     """Break packet down into primitives, and do basic interpretation.
 
@@ -33,7 +34,6 @@ def parse_packet(packet):
     ... }
     True
     """
-
     node_id, count, name, attrs = packet.split(';', 3)
 
     data = {
