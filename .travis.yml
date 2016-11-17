@@ -1,8 +1,8 @@
 language: python
 python:
-- 2.7
 - 3.4
 - 3.5
+- 2.7
 - pypy3
 install: pip install tox-travis
 script: tox
@@ -15,7 +15,7 @@ deploy:
   user: aequitas
   password:
     secure: Eh5fmN851Kcm3PvWHoLb/UsSjVF2h6xIxYdr8CmgHU5vOJVDgpV4GTs/lIl5Ko/fLMzGY/SSj8NWZWcv/qU4wibiTL0f4et6wAX5E6RS6E3eNtMn5HL1b0JMHgAaZN9RFY9GEw7/KhLg+sI6OaOAXUUTbBYRfTgZD3t2yFoNZR8TqIuQOVhQojngzDDtZS2hXdBciwbOezRsbgLVOWUhXGKKrMyRI88/FXzvyw0srfsHUIoFPosW/PS1Qhm8reoO1eg9TpKUMSZ7K/2kqQ6F2St2j3C0V7CGUnFSZqFS9rrcQKZYcckjKflGAK//C8ai3/vDXX/lIdj6oMBjBdONdVw2xVlReebTAt9Q2JAzHUEu4aFbHUvXkHG5CKJIZBBOP+Ujw9iSZKfwTNb85g0CynXS9EWouqWlii9uWyfzqhloA2+txuRhtEB28bdbIdBlntxWELEXQvqrgd/jOamKNilsnn7Wy6cG3jMEWXr5GsxdGsvw2R2LsFlPd3q6FmbnqKiqD5S3CHh9qEk8tBm/pZu49nMoFIpSpMc2rce8U5Th3DKsPa7gY7pAsHg5ebIB5K0neDildcp0nxIn1BxbFfaZAoDGZT0+cIRAOW4bNqM69B3jOQQOvG3gtsyl0bZHkamUWO2nM5d7SZ5tsSC5+KHV+jPRS5CjdDcXnl4a4H8=
+  distributions: "sdist bdist_wheel"
   on:
     tags: true
-    distributions: "sdist bdist_wheel"
     repo: aequitas/python-rflink
