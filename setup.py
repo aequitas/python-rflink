@@ -14,7 +14,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 setup(
     name='rflink',
 
-    version='0.0.2',
+    version='0.0.3',
 
     description=__doc__,
     long_description=long_description,
