@@ -35,8 +35,8 @@ class RflinkProtocol(asyncio.Protocol):
 
     def handle_lines(self):
         """Assemble incoming data into per-line packets."""
-        while "\n" in self.buffer:
-            line, self.buffer = self.buffer.split("\n", 1)
+        while "\r\n" in self.buffer:
+            line, self.buffer = self.buffer.split("\r\n", 1)
             if self.start_packet(line):
                 self.handle_raw_packet(line)
 

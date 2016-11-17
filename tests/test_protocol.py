@@ -5,9 +5,9 @@ from unittest.mock import Mock
 import pytest
 from rflink.protocol import RflinkProtocol
 
-COMPLETE_PACKET = b'20;E0;NewKaku;ID=cac142;SWITCH=1;CMD=ALLOFF;\n'
+COMPLETE_PACKET = b'20;E0;NewKaku;ID=cac142;SWITCH=1;CMD=ALLOFF;\r\n'
 INCOMPLETE_PART1 = b'20;E0;NewKaku;ID=cac'
-INCOMPLETE_PART2 = b'142;SWITCH=1;CMD=ALLOFF;\n'
+INCOMPLETE_PART2 = b'142;SWITCH=1;CMD=ALLOFF;\r\n'
 
 COMPLETE_PACKET_DICT = {
     'id': 'cac142',
