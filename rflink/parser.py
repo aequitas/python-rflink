@@ -1,5 +1,6 @@
 """Parsers."""
 
+import re
 import struct
 
 NODE_LOOKUP = {
@@ -13,6 +14,8 @@ ATTR_LOOKUP = {
     'bat': 'battery',
     'temp': 'temperature',
     'hum': 'humidity',
+    'rev': 'revision',
+    'ver': 'version',
 }
 
 VALUE_TRANSLATION = {
@@ -20,6 +23,9 @@ VALUE_TRANSLATION = {
     'temp': lambda t: struct.unpack('>h', bytes.fromhex(t))[0]/10,
     'hum': int,
 }
+
+BANNER_RE = (r'(?P<hardware>[a-zA-Z\s]+) - (?P<firmware>[a-zA-Z\s]+) '
+            r'V(?P<version>[0-9\.]+) - R(?P<revision>[0-9\.]+)')
 
 
 def parse_packet(packet):
@@ -38,15 +44,40 @@ def parse_packet(packet):
 
     data = {
         'node': NODE_LOOKUP[node_id],
-        'name': name.lower(),
     }
 
+    # make exception for version response
+    if '=' in name:
+        attrs = name + ';' + attrs
+        name = 'version'
+
+    # no attributes but instead the welcome banner
+    if 'RFLink Gateway' in name:
+        data.update(parse_banner(name))
+        name = 'banner'
+
+    if name == 'PONG':
+        data['ping'] = name.lower()
+
+    if name == 'CMD UNKNOWN':
+        data['response'] = 'command unknown'
+        data['ok'] = False
+
+    if name == 'OK':
+        data['ok'] = True
+
+    data['name'] = name.lower()
+
     # convert key=value pairs where needed
-    for attr in attrs.strip(';').split(';'):
+    for attr in filter(None, attrs.strip(';').split(';')):
         key, value = attr.lower().split('=')
         if key in VALUE_TRANSLATION:
             value = VALUE_TRANSLATION.get(key)(value)
         key = ATTR_LOOKUP.get(key, key)
         data[key] = value
-
     return data
+
+
+def parse_banner(banner):
+    """Extract hardware/firmware name and version from banner."""
+    return re.match(BANNER_RE, banner).groupdict()
