@@ -10,3 +10,10 @@ Python RFlink library
 Library and CLI tools for interacting with RFlink 433MHz transceiver.
 
 http://www.nemcon.nl/blog2/
+
+Installation
+------------
+
+.. code-block:: bash
+
+    $ pip install rflink
