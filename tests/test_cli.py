@@ -16,7 +16,7 @@ def test_spawns(monkeypatch):
         yield from asyncio.sleep(0.1)
         loop.stop()
     loop = asyncio.get_event_loop()
-    asyncio.ensure_future(stop(), loop=loop)
+    asyncio.async(stop(), loop=loop)
 
     # use simulation interface
     args = ['--port', 'loop://', '-v']
