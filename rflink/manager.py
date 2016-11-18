@@ -49,4 +49,8 @@ class Rflink:
         if packet.get('id'):
             if len(packet['id']) != 6:
                 packet['id'] = '0000' + packet['id']
-            self.send_command(packet['protocol'], packet['id'], packet['switch'], 'OFF')
+            if packet['command'] == 'on':
+                cmd = 'off'
+            else:
+                cmd = 'on'
+            self.send_command(packet['protocol'], packet['id'], packet['switch'], cmd)

@@ -40,7 +40,7 @@ def parse_packet(packet):
     ... }
     True
     """
-    node_id, count, protocol, attrs = packet.split(';', 3)
+    node_id, _, protocol, attrs = packet.split(';', 3)
 
     data = {
         'node': NODE_LOOKUP[node_id],
@@ -52,21 +52,25 @@ def parse_packet(packet):
         protocol = 'version'
 
     # no attributes but instead the welcome banner
-    if 'RFLink Gateway' in protocol:
+    elif 'RFLink Gateway' in protocol:
         data.update(parse_banner(protocol))
         protocol = 'banner'
 
-    if protocol == 'PONG':
+    elif protocol == 'PONG':
         data['ping'] = protocol.lower()
 
-    if protocol == 'CMD UNKNOWN':
+    # failure response
+    elif protocol == 'CMD UNKNOWN':
         data['response'] = 'command unknown'
         data['ok'] = False
 
-    if protocol == 'OK':
+    # ok response
+    elif protocol == 'OK':
         data['ok'] = True
 
-    data['protocol'] = protocol.lower()
+    # its a regular packet
+    else:
+        data['protocol'] = protocol.lower()
 
     # convert key=value pairs where needed
     for attr in filter(None, attrs.strip(';').split(';')):
