@@ -4,7 +4,7 @@ python:
 - 3.5
 - 2.7
 - pypy3
-install: pip install tox-travis
+install: pip install tox-travis python-coveralls codeclimate-test-reporter
 script: tox
 matrix:
   allow_failures:
@@ -19,3 +19,6 @@ deploy:
   on:
     tags: true
     repo: aequitas/python-rflink
+after_success:
+  - coveralls
+  - CODECLIMATE_REPO_TOKEN=9c681ab3800c3aa7f96622e4a0018a0ffccabae55adcd2f3ff6cbad32344aac1 codeclimate-test-reporter
