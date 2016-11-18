@@ -18,6 +18,7 @@ Options:
 
 import asyncio
 import logging
+import sys
 from functools import partial
 
 import pkg_resources
@@ -28,9 +29,9 @@ from serial_asyncio import create_serial_connection
 from .protocol import RflinkProtocol
 
 
-def main():
+def main(argv=sys.argv, loop=None):
     """Parse argument and setup main program loop."""
-    args = docopt(__doc__, version=pkg_resources.require('rflink')[0].version)
+    args = docopt(__doc__, argv=argv, version=pkg_resources.require('rflink')[0].version)
 
     if args['--verbose']:
         level = logging.DEBUG
@@ -38,11 +39,12 @@ def main():
         level = logging.INFO
     logging.basicConfig(level=level)
 
-    loop = asyncio.get_event_loop()
+    if not loop:
+        loop = asyncio.get_event_loop()
 
     protocol = partial(RflinkProtocol, loop)
     if args.get('--host'):
-        conn = loop.create_connection(loop, protocol,
+        conn = loop.create_connection(protocol,
             args['--host'], args['--port'])
     else:
         conn = create_serial_connection(loop, protocol,
