@@ -13,7 +13,7 @@ INCOMPLETE_PART2 = b'142;SWITCH=1;CMD=ALLOFF;\r\n'
 COMPLETE_PACKET_DICT = {
     'id': 'cac142',
     'node': 'gateway',
-    'name': 'newkaku',
+    'protocol': 'newkaku',
     'command': 'alloff',
     'switch': '1',
 }

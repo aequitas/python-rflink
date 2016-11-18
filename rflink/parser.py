@@ -33,40 +33,40 @@ def parse_packet(packet):
 
     >>> parse_packet('20;06;Kaku;ID=41;SWITCH=1;CMD=ON;') == {
     ...     'node': 'gateway',
-    ...     'name': 'kaku',
+    ...     'protocol': 'kaku',
     ...     'id': '41',
     ...     'switch': '1',
     ...     'command': 'on',
     ... }
     True
     """
-    node_id, count, name, attrs = packet.split(';', 3)
+    node_id, count, protocol, attrs = packet.split(';', 3)
 
     data = {
         'node': NODE_LOOKUP[node_id],
     }
 
     # make exception for version response
-    if '=' in name:
-        attrs = name + ';' + attrs
-        name = 'version'
+    if '=' in protocol:
+        attrs = protocol + ';' + attrs
+        protocol = 'version'
 
     # no attributes but instead the welcome banner
-    if 'RFLink Gateway' in name:
-        data.update(parse_banner(name))
-        name = 'banner'
+    if 'RFLink Gateway' in protocol:
+        data.update(parse_banner(protocol))
+        protocol = 'banner'
 
-    if name == 'PONG':
-        data['ping'] = name.lower()
+    if protocol == 'PONG':
+        data['ping'] = protocol.lower()
 
-    if name == 'CMD UNKNOWN':
+    if protocol == 'CMD UNKNOWN':
         data['response'] = 'command unknown'
         data['ok'] = False
 
-    if name == 'OK':
+    if protocol == 'OK':
         data['ok'] = True
 
-    data['name'] = name.lower()
+    data['protocol'] = protocol.lower()
 
     # convert key=value pairs where needed
     for attr in filter(None, attrs.strip(';').split(';')):

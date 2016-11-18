@@ -53,4 +53,6 @@ class RflinkProtocol(asyncio.Protocol):
 
     def handle_packet(self, packet):
         """Callback for handling incoming parsed packets."""
-        print(packet)
+        self.log.debug('parsed packet: %s', packet)
+        if self.packet_callback:
+            self.packet_callback(packet)

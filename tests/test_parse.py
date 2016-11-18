@@ -1,6 +1,7 @@
 """Test parsing of RFlink packets."""
 
 import pytest
+
 from rflink.parser import parse_packet
 
 
@@ -18,7 +19,7 @@ from rflink.parser import parse_packet
         'command': 'off', 'switch': '4',
     }],
     ['20;E0;NewKaku;ID=cac142;SWITCH=1;CMD=ALLOFF;', {
-        'id': 'cac142', 'name': 'newkaku',
+        'id': 'cac142', 'protocol': 'newkaku',
     }],
     ['20;00;Nodo RadioFrequencyLink - RFLink Gateway V1.1 - R45;', {
         'hardware': 'Nodo RadioFrequencyLink',
@@ -35,7 +36,7 @@ from rflink.parser import parse_packet
     [('20;02;STATUS;setRF433=ON;setNodoNRF=OFF;setMilight=OFF;'
       'setLivingColors=OFF;setAnsluta=OFF;setGPIO=OFF;setBLE=OFF;'
       'setMysensors=OFF;'), {
-          'name': 'status',
+          'protocol': 'status',
           'setrf433': 'on',
           'setmysensors': 'off',
     }],
