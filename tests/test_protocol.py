@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
+
 from rflink.protocol import RflinkProtocol
 
 COMPLETE_PACKET = b'20;E0;NewKaku;ID=cac142;SWITCH=1;CMD=ALLOFF;\r\n'
