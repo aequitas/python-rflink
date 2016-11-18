@@ -23,13 +23,12 @@ from functools import partial
 
 import pkg_resources
 from docopt import docopt
-
 from serial_asyncio import create_serial_connection
 
 from .protocol import RflinkProtocol
 
 
-def main(argv=sys.argv, loop=None):
+def main(argv=sys.argv[1:], loop=None):
     """Parse argument and setup main program loop."""
     args = docopt(__doc__, argv=argv, version=pkg_resources.require('rflink')[0].version)
 
