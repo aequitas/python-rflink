@@ -61,8 +61,7 @@ class PacketHandling:
     def handle_packet(self, packet):
         """Callback for handling incoming parsed packets."""
         log.debug('parsed packet: %s', packet)
-        if self.packet_callback:
-            self.packet_callback(packet)
+        print(packet)
 
     def send_command(self, protocol, address, switch, action):
         """Send device command to rflink gateway."""
