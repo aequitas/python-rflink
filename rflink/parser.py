@@ -34,7 +34,7 @@ def parse_packet(packet):
     >>> parse_packet('20;06;Kaku;ID=41;SWITCH=1;CMD=ON;') == {
     ...     'node': 'gateway',
     ...     'protocol': 'kaku',
-    ...     'id': '41',
+    ...     'id': '000041',
     ...     'switch': '1',
     ...     'command': 'on',
     ... }
@@ -79,6 +79,11 @@ def parse_packet(packet):
             value = VALUE_TRANSLATION.get(key)(value)
         key = ATTR_LOOKUP.get(key, key)
         data[key] = value
+
+    # correct KaKu device address
+    if data.get('protocol', '') == 'kaku' and len(data['id']) != 6:
+        data['id'] = '0000' + data['id']
+
     return data
 
 

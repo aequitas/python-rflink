@@ -1,15 +1,16 @@
 """Command line interface for rflink library.
 
 Usage:
-  rflink [-v] [--port=<port> [--baud=<baud>] | --host=<host> --port=<port>]
+  rflink [options]
   rflink (-h | --help)
   rflink --version
 
 Options:
   -p --port=<port>  Serial port to connect to [default: /dev/ttyACM0],
-                        or TCP port in TCP mode.
+                      or TCP port in TCP mode.
   --baud=<baud>     Serial baud rate [default: 57600].
   --host=<host>     TCP mode, connect to host instead of serial port.
+  -m=<handling>     How to handle incoming packets [default: print].
   -h --help         Show this screen.
   -v --verbose      Increase verbosity
   --version         Show version.
@@ -19,13 +20,20 @@ Options:
 import asyncio
 import logging
 import sys
-from functools import partial
 
 import pkg_resources
 from docopt import docopt
-from serial_asyncio import create_serial_connection
 
-from .protocol import RflinkProtocol
+from .protocol import (
+    InverterProtocol,
+    RflinkProtocol,
+    create_rflink_connection
+)
+
+PROTOCOLS = {
+    'print': RflinkProtocol,
+    'invert': InverterProtocol,
+}
 
 
 def main(argv=sys.argv[1:], loop=None):
@@ -41,16 +49,22 @@ def main(argv=sys.argv[1:], loop=None):
     if not loop:
         loop = asyncio.get_event_loop()
 
-    protocol = partial(RflinkProtocol, loop)
-    if args.get('--host'):
-        conn = loop.create_connection(protocol,
-            args['--host'], args['--port'])
-    else:
-        conn = create_serial_connection(loop, protocol,
-            args['--port'], args['--baud'])
+    protocol = PROTOCOLS[args['-m']]
+    conn = create_rflink_connection(
+        protocol=protocol,
+        host=args['--host'],
+        port=args['--port'],
+        baud=args['--baud'],
+        loop=loop,
+    )
+
+    transport, protocol = loop.run_until_complete(conn)
 
     try:
-        loop.run_until_complete(conn)
+        loop.run_forever()
+    except KeyboardInterrupt:
+        # cleanup connection
+        transport.close()
         loop.run_forever()
     finally:
         loop.close()
