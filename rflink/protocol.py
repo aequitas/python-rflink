@@ -86,13 +86,23 @@ class InverterProtocol(RflinkProtocol):
 
     def handle_packet(self, packet):
         """Handle incoming packet from rflink gateway."""
-        if packet.get('id'):
+        if packet.get('switch'):
             if packet['command'] == 'on':
                 cmd = 'off'
             else:
                 cmd = 'on'
             self.send_command(packet['protocol'], packet['id'],
                               packet['switch'], cmd)
+
+
+class RepeaterProtocol(RflinkProtocol):
+    """Repeat switch commands received."""
+
+    def handle_packet(self, packet):
+        """Handle incoming packet from rflink gateway."""
+        if packet.get('switch'):
+            self.send_command(packet['protocol'], packet['id'],
+                              packet['switch'], packet['command'])
 
 
 def create_rflink_connection(*args, **kwargs):

@@ -26,6 +26,7 @@ from docopt import docopt
 
 from .protocol import (
     InverterProtocol,
+    RepeaterProtocol,
     RflinkProtocol,
     create_rflink_connection
 )
@@ -33,6 +34,7 @@ from .protocol import (
 PROTOCOLS = {
     'print': RflinkProtocol,
     'invert': InverterProtocol,
+    'repeat': RepeaterProtocol,
 }
 
 
