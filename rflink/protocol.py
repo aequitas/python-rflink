@@ -55,13 +55,22 @@ class PacketHandling:
     def handle_raw_packet(self, raw_packet):
         """Callback for handling incoming raw packets."""
         log.debug('got packet: %s', raw_packet)
-        packet = parse_packet(raw_packet)
-        self.handle_packet(packet)
+        packet = None
+        try:
+            packet = parse_packet(raw_packet)
+        except:
+            log.exception('failed to parse packet: %s', packet)
+
+        if packet:
+            self.handle_packet(packet)
 
     def handle_packet(self, packet):
         """Callback for handling incoming parsed packets."""
         log.debug('parsed packet: %s', packet)
-        print(packet)
+        if self.packet_callback:
+            self.packet_callback(packet)
+        else:
+            print(packet)
 
     def send_command(self, protocol, address, switch, action):
         """Send device command to rflink gateway."""
@@ -110,7 +119,8 @@ def create_rflink_connection(*args, **kwargs):
 
     # use default protocol if not specified
     rflink_protocol = kwargs.pop('protocol', RflinkProtocol)
-    protocol = partial(rflink_protocol, loop)
+    packet_callback = kwargs.pop('packet_callback', None)
+    protocol = partial(rflink_protocol, loop, packet_callback=packet_callback)
 
     # setup serial connection if no transport specified
     host = kwargs.pop('host', None)
