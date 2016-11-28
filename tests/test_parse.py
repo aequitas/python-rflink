@@ -9,8 +9,8 @@ from rflink.parser import parse_packet
     ['20;2D;UPM/Esic;ID=0001;TEMP=00cf;HUM=16;BAT=OK;', {
         'humidity': 16, 'temperature': 20.7,
     }],
-    ['20;2D;UPM/Esic;ID=0001;TEMP=80cf;HUM=16;BAT=OK;', {
-        'temperature': -3256.1,
+    ['20;36;Alecto V1;ID=0334;TEMP=800d;HUM=33;BAT=OK;', {
+        'temperature': -1.3
     }],
     ['20;08;UPM/Esic;ID=1003;RAIN=0010;BAT=OK;', {
         'battery': 'ok'

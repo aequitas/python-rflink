@@ -1,7 +1,6 @@
 """Parsers."""
 
 import re
-import struct
 
 NODE_LOOKUP = {
     '10': 'master',
@@ -18,9 +17,17 @@ ATTR_LOOKUP = {
     'ver': 'version',
 }
 
+
+def signed_to_float(hex):
+    """Convert signed hexadecimal to floating value."""
+    if int(hex, 16) & 0x8000:
+        return -(int(hex, 16) & 0x7FFF)/10
+    else:
+        return int(hex, 16)/10
+
+
 VALUE_TRANSLATION = {
-    # 'temp': lambda t: int(t, 16)/10,
-    'temp': lambda t: struct.unpack('>h', bytes.fromhex(t))[0]/10,
+    'temp': signed_to_float,
     'hum': int,
 }
 
