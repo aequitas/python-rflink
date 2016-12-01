@@ -2,6 +2,7 @@
 
 from codecs import open
 from os import path
+from subprocess import check_output
 
 from setuptools import find_packages, setup
 
@@ -11,10 +12,17 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+
+def version_from_git():
+    """Acquire package version form current git tag."""
+    return check_output(['git', 'describe', '--tags', '--abbrev=0'],
+        universal_newlines=True)
+
+
 setup(
     name='rflink',
 
-    version='0.0.6',
+    version=version_from_git(),
 
     description=__doc__,
     long_description=long_description,
