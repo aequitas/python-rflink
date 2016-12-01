@@ -1,5 +1,6 @@
 """Asyncio protocol implementation of RFlink."""
 import asyncio
+import concurrent
 import logging
 import re
 from functools import partial
@@ -9,6 +10,8 @@ from serial_asyncio import create_serial_connection
 from .parser import parse_packet
 
 log = logging.getLogger(__name__)
+
+TIMEOUT = 5
 
 
 class ProtocolBase(asyncio.Protocol):
@@ -23,6 +26,8 @@ class ProtocolBase(asyncio.Protocol):
         self.packet = ''
         self.start_packet = re.compile('^(10|11|20);').match
         self.buffer = ''
+        self._command_ack = asyncio.Event()
+        self._ready_to_send = asyncio.Lock()
 
     def connection_made(self, transport):
         """Just logging for now."""
@@ -62,12 +67,22 @@ class PacketHandling:
             log.exception('failed to parse packet: %s', packet)
 
         if packet:
-            self.handle_packet(packet)
+            if 'ok' in packet:
+                # handle response packets internally
+                log.debug('command response: %s', packet)
+                self._last_ack = packet
+                self._command_ack.set()
+            else:
+                self.handle_packet(packet)
+        else:
+            log.warning('no valid packet')
 
     def handle_packet(self, packet):
         """Callback for handling incoming parsed packets."""
         log.debug('parsed packet: %s', packet)
+
         if self.packet_callback:
+            # forward to callback
             self.packet_callback(packet)
         else:
             print(packet)
@@ -82,7 +97,30 @@ class PacketHandling:
         """Concat fields and send packet to gateway."""
         fields = ['10'] + fields
         data = ';'.join(fields + ['\r\n']).encode()
+        log.debug('writing data: %s', data)
         self.transport.write(data)
+
+    @asyncio.coroutine
+    def send_command_ack(self, protocol, address, switch, action):
+        """Send command, wait for gateway to repond with acknowledgment."""
+        # serialize commands
+        yield from self._ready_to_send.acquire()
+
+        self._command_ack.clear()
+        self.send_command(protocol, address, switch, action)
+
+        log.debug('waiting for acknowledgement')
+        try:
+            yield from asyncio.wait_for(self._command_ack.wait(), TIMEOUT)
+            log.debug('packet acknowledged')
+        except concurrent.futures._base.TimeoutError:
+            acknowledgement = {'ok': False, 'message': 'timeout'}
+            log.warning('acknowledge timeout')
+        else:
+            acknowledgement = self._last_ack.get('ok', False)
+        # allow next command
+        self._ready_to_send.release()
+        return acknowledgement
 
 
 class RflinkProtocol(PacketHandling, ProtocolBase):
@@ -99,8 +137,14 @@ class InverterProtocol(RflinkProtocol):
                 cmd = 'off'
             else:
                 cmd = 'on'
-            self.send_command(packet['protocol'], packet['id'],
-                              packet['switch'], cmd)
+
+            task = self.send_command_ack(
+                packet['protocol'],
+                packet['id'],
+                packet['switch'],
+                cmd
+            )
+            self.loop.create_task(task)
 
 
 class RepeaterProtocol(RflinkProtocol):
@@ -109,8 +153,13 @@ class RepeaterProtocol(RflinkProtocol):
     def handle_packet(self, packet):
         """Handle incoming packet from rflink gateway."""
         if packet.get('switch'):
-            self.send_command(packet['protocol'], packet['id'],
-                              packet['switch'], packet['command'])
+            task = self.send_command_ack(
+                packet['protocol'],
+                packet['id'],
+                packet['switch'],
+                packet['command']
+            )
+            self.loop.create_task(task)
 
 
 def create_rflink_connection(*args, **kwargs):
