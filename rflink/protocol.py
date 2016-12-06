@@ -2,12 +2,11 @@
 import asyncio
 import concurrent
 import logging
-import re
 from functools import partial
 
 from serial_asyncio import create_serial_connection
 
-from .parser import parse_packet
+from .parser import decode_packet, encode_packet, is_packet_header
 
 log = logging.getLogger(__name__)
 
@@ -17,17 +16,14 @@ TIMEOUT = 5
 class ProtocolBase(asyncio.Protocol):
     """Manage low level rflink protocol."""
 
-    transport = None
+    transport = None  # type: asyncio.Transport
 
     def __init__(self, loop, packet_callback=None):
         """Initialize class."""
         self.loop = loop
         self.packet_callback = packet_callback
         self.packet = ''
-        self.start_packet = re.compile('^(10|11|20);').match
         self.buffer = ''
-        self._command_ack = asyncio.Event()
-        self._ready_to_send = asyncio.Lock()
 
     def connection_made(self, transport):
         """Just logging for now."""
@@ -45,8 +41,14 @@ class ProtocolBase(asyncio.Protocol):
         """Assemble incoming data into per-line packets."""
         while "\r\n" in self.buffer:
             line, self.buffer = self.buffer.split("\r\n", 1)
-            if self.start_packet(line):
+            if is_packet_header(0):
                 self.handle_raw_packet(line)
+
+    def send_raw_packet(self, packet: str):
+        """Encode and put packet string onto write buffer."""
+        data = packet + r'\r\n'
+        log.debug('writing data: %s', data)
+        self.transport.write(data.encode())
 
     def connection_lost(self, exc):
         """Stop when connection is lost."""
@@ -55,14 +57,20 @@ class ProtocolBase(asyncio.Protocol):
 
 
 class PacketHandling:
-    """Handle translating rflink packets."""
+    """Handle translating rflink packets into python primitives."""
+
+    def __init__(self, *args, **kwargs):
+        """Add packethandling specific initialization."""
+        super().__init__(*args, **kwargs)
+        self._command_ack = asyncio.Event()
+        self._ready_to_send = asyncio.Lock()
 
     def handle_raw_packet(self, raw_packet):
-        """Callback for handling incoming raw packets."""
+        """Parse raw packet string into packet dict."""
         log.debug('got packet: %s', raw_packet)
         packet = None
         try:
-            packet = parse_packet(raw_packet)
+            packet = decode_packet(raw_packet)
         except:
             log.exception('failed to parse packet: %s', packet)
 
@@ -78,7 +86,7 @@ class PacketHandling:
             log.warning('no valid packet')
 
     def handle_packet(self, packet):
-        """Callback for handling incoming parsed packets."""
+        """Process incoming packet dict and optionally call callback."""
         log.debug('parsed packet: %s', packet)
 
         if self.packet_callback:
@@ -87,18 +95,15 @@ class PacketHandling:
         else:
             print(packet)
 
+    def send_packet(self, fields):
+        """Concat fields and send packet to gateway."""
+        self.send_raw_packet(encode_packet(fields))
+
     def send_command(self, protocol, address, switch, action):
         """Send device command to rflink gateway."""
         command = [protocol, address, switch, action]
         log.debug('sending command: %s', command)
         self.send_packet(command)
-
-    def send_packet(self, fields):
-        """Concat fields and send packet to gateway."""
-        fields = ['10'] + fields
-        data = ';'.join(fields + ['\r\n']).encode()
-        log.debug('writing data: %s', data)
-        self.transport.write(data)
 
     @asyncio.coroutine
     def send_command_ack(self, protocol, address, switch, action):

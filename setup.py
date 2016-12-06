@@ -62,6 +62,7 @@ setup(
     install_requires=[
         'docopt',
         'pyserial-asyncio',
+        'typing',
     ],
 
     # # List additional groups of dependencies here (e.g. development

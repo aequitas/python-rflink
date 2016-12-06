@@ -1,14 +1,23 @@
 """Parsers."""
 
 import re
+from enum import Enum
+from typing import Any, Callable, Dict, cast
 
-NODE_LOOKUP = {
-    '10': 'master',
-    '11': 'echo',
-    '20': 'gateway',
-}
+DELIM = ';'
+SWITCH_COMMAND_TEMPLATE = '{node};{protocol};{id};{switch};{command};'
+PACKET_HEADER_RE = '^(10|11|20);'
 
-ATTR_LOOKUP = {
+
+class PacketHeader(Enum):
+    """Packet source identification."""
+
+    master = '10'
+    echo = '11'
+    gateway = '20'
+
+
+PACKET_FIELDS = {
     'cmd': 'command',
     'bat': 'battery',
     'temp': 'temperature',
@@ -18,7 +27,7 @@ ATTR_LOOKUP = {
 }
 
 
-def signed_to_float(hex):
+def signed_to_float(hex: str) -> float:
     """Convert signed hexadecimal to floating value."""
     if int(hex, 16) & 0x8000:
         return -(int(hex, 16) & 0x7FFF)/10
@@ -26,19 +35,24 @@ def signed_to_float(hex):
         return int(hex, 16)/10
 
 
-VALUE_TRANSLATION = {
+VALUE_TRANSLATION = cast(Dict[str, Callable], {
     'temp': signed_to_float,
     'hum': int,
-}
+})
 
 BANNER_RE = (r'(?P<hardware>[a-zA-Z\s]+) - (?P<firmware>[a-zA-Z\s]+) '
             r'V(?P<version>[0-9\.]+) - R(?P<revision>[0-9\.]+)')
 
 
-def parse_packet(packet):
+def is_packet_header(packet: str) -> bool:
+    """Tell if string begins with packet header."""
+    return bool(re.compile(PACKET_HEADER_RE).match)
+
+
+def decode_packet(packet: str) -> dict:
     """Break packet down into primitives, and do basic interpretation.
 
-    >>> parse_packet('20;06;Kaku;ID=41;SWITCH=1;CMD=ON;') == {
+    >>> decode_packet('20;06;Kaku;ID=41;SWITCH=1;CMD=ON;') == {
     ...     'node': 'gateway',
     ...     'protocol': 'kaku',
     ...     'id': '000041',
@@ -47,15 +61,15 @@ def parse_packet(packet):
     ... }
     True
     """
-    node_id, _, protocol, attrs = packet.split(';', 3)
+    node_id, _, protocol, attrs = packet.split(DELIM, 3)
 
-    data = {
-        'node': NODE_LOOKUP[node_id],
-    }
+    data = cast(Dict[str, Any], {
+        'node': PacketHeader(node_id).name,
+    })
 
     # make exception for version response
     if '=' in protocol:
-        attrs = protocol + ';' + attrs
+        attrs = protocol + DELIM + attrs
         protocol = 'version'
 
     # no attributes but instead the welcome banner
@@ -80,12 +94,12 @@ def parse_packet(packet):
         data['protocol'] = protocol.lower()
 
     # convert key=value pairs where needed
-    for attr in filter(None, attrs.strip(';').split(';')):
+    for attr in filter(None, attrs.strip(DELIM).split(DELIM)):
         key, value = attr.lower().split('=')
         if key in VALUE_TRANSLATION:
             value = VALUE_TRANSLATION.get(key)(value)
-        key = ATTR_LOOKUP.get(key, key)
-        data[key] = value
+        name = PACKET_FIELDS.get(key, key)
+        data[name] = value
 
     # correct KaKu device address
     if data.get('protocol', '') == 'kaku' and len(data['id']) != 6:
@@ -94,6 +108,23 @@ def parse_packet(packet):
     return data
 
 
-def parse_banner(banner):
+def parse_banner(banner: str) -> dict:
     """Extract hardware/firmware name and version from banner."""
     return re.match(BANNER_RE, banner).groupdict()
+
+
+def encode_packet(packet: dict) -> str:
+    """Construct packet string from packet dictionary.
+
+    >>> encode_packet({
+    ...     'protocol': 'newkaku',
+    ...     'id': '000001',
+    ...     'switch': '01',
+    ...     'command': 'on',
+    ... })
+    '10;newkaku;000001;01;on;'
+    """
+    return SWITCH_COMMAND_TEMPLATE.format(
+        node=PacketHeader.master.value,
+        **packet
+    )

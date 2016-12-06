@@ -2,7 +2,7 @@
 
 import pytest
 
-from rflink.parser import parse_packet
+from rflink.parser import decode_packet
 
 
 @pytest.mark.parametrize('packet,expect', [
@@ -50,7 +50,7 @@ from rflink.parser import parse_packet
 ])
 def test_packet_parsing(packet, expect):
     """Packet should be broken up into their primitives."""
-    result = parse_packet(packet)
+    result = decode_packet(packet)
 
     for key, value in expect.items():
         assert result[key] == value
