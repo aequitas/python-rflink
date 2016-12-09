@@ -40,7 +40,8 @@ PROTOCOLS = {
 
 def main(argv=sys.argv[1:], loop=None):
     """Parse argument and setup main program loop."""
-    args = docopt(__doc__, argv=argv, version=pkg_resources.require('rflink')[0].version)
+    args = docopt(__doc__, argv=argv,
+                  version=pkg_resources.require('rflink')[0].version)
 
     if args['--verbose']:
         level = logging.DEBUG

@@ -16,7 +16,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 def version_from_git():
     """Acquire package version form current git tag."""
     return check_output(['git', 'describe', '--tags', '--abbrev=0'],
-        universal_newlines=True)
+                        universal_newlines=True)
 
 
 setup(

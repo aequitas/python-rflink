@@ -30,9 +30,9 @@ PACKET_FIELDS = {
 def signed_to_float(hex: str) -> float:
     """Convert signed hexadecimal to floating value."""
     if int(hex, 16) & 0x8000:
-        return -(int(hex, 16) & 0x7FFF)/10
+        return -(int(hex, 16) & 0x7FFF) / 10
     else:
-        return int(hex, 16)/10
+        return int(hex, 16) / 10
 
 
 VALUE_TRANSLATION = cast(Dict[str, Callable], {
@@ -41,7 +41,7 @@ VALUE_TRANSLATION = cast(Dict[str, Callable], {
 })
 
 BANNER_RE = (r'(?P<hardware>[a-zA-Z\s]+) - (?P<firmware>[a-zA-Z\s]+) '
-            r'V(?P<version>[0-9\.]+) - R(?P<revision>[0-9\.]+)')
+             r'V(?P<version>[0-9\.]+) - R(?P<revision>[0-9\.]+)')
 
 
 def is_packet_header(packet: str) -> bool:
