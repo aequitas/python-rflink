@@ -1,4 +1,4 @@
-"""Test RFlink serial protocol."""
+"""Test RFlink serial low level and packet parsing protocol."""
 
 from unittest.mock import Mock
 

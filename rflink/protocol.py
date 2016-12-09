@@ -3,6 +3,7 @@ import asyncio
 import concurrent
 import logging
 from functools import partial
+from typing import Callable
 
 from serial_asyncio import create_serial_connection
 
@@ -18,10 +19,9 @@ class ProtocolBase(asyncio.Protocol):
 
     transport = None  # type: asyncio.Transport
 
-    def __init__(self, loop, packet_callback=None):
+    def __init__(self, loop) -> None:
         """Initialize class."""
         self.loop = loop
-        self.packet_callback = packet_callback
         self.packet = ''
         self.buffer = ''
 
@@ -44,6 +44,10 @@ class ProtocolBase(asyncio.Protocol):
             if is_packet_header(0):
                 self.handle_raw_packet(line)
 
+    def handle_raw_packet(self, raw_packet: bytes) -> None:
+        """Handle one raw incoming packet."""
+        raise NotImplementedError()
+
     def send_raw_packet(self, packet: str):
         """Encode and put packet string onto write buffer."""
         data = packet + r'\r\n'
@@ -56,14 +60,13 @@ class ProtocolBase(asyncio.Protocol):
         self.loop.stop()
 
 
-class PacketHandling:
-    """Handle translating rflink packets into python primitives."""
+class PacketHandling(ProtocolBase):
+    """Handle translating rflink packets to/from python primitives."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, packet_callback: Callable = None, **kwargs) -> None:
         """Add packethandling specific initialization."""
         super().__init__(*args, **kwargs)
-        self._command_ack = asyncio.Event()
-        self._ready_to_send = asyncio.Lock()
+        self.packet_callback = packet_callback
 
     def handle_raw_packet(self, raw_packet):
         """Parse raw packet string into packet dict."""
@@ -104,6 +107,17 @@ class PacketHandling:
         command = [protocol, address, switch, action]
         log.debug('sending command: %s', command)
         self.send_packet(command)
+
+
+class CommandSerialization(ProtocolBase):
+    """Logic for ensuring asynchronous commands are send in order."""
+
+    def __init__(self, *args, packet_callback: Callable = None, **kwargs) -> None:
+        """Add packethandling specific initialization."""
+        super().__init__(*args, **kwargs)
+        self.packet_callback = packet_callback
+        self._command_ack = asyncio.Event()
+        self._ready_to_send = asyncio.Lock()
 
     @asyncio.coroutine
     def send_command_ack(self, protocol, address, switch, action):
