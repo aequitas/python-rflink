@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, cast
 
 DELIM = ';'
 SWITCH_COMMAND_TEMPLATE = '{node};{protocol};{id};{switch};{command};'
-PACKET_HEADER_RE = '^(10|11|20);'
+PACKET_HEADER_RE = '^(11;)?(10;[a-zA-Z]+;|20;[0-9A-Z]{2};([a-zA-Z]+;|Nodo))'
 
 
 class PacketHeader(Enum):
@@ -45,8 +45,22 @@ BANNER_RE = (r'(?P<hardware>[a-zA-Z\s]+) - (?P<firmware>[a-zA-Z\s]+) '
 
 
 def is_packet_header(packet: str) -> bool:
-    """Tell if string begins with packet header."""
-    return bool(re.compile(PACKET_HEADER_RE).match)
+    """Tell if string begins with packet header.
+
+    >>> is_packet_header('20;3B;NewKaku;')
+    True
+
+    >>> is_packet_header('10;Kaku;')
+    True
+
+    >>> is_packet_header('11;20;0B;NewKaku;')
+    True
+
+    >>> is_packet_header('20;B0;Auriol20;')
+    False
+
+    """
+    return bool(re.match(PACKET_HEADER_RE, packet))
 
 
 def decode_packet(packet: str) -> dict:
@@ -60,6 +74,7 @@ def decode_packet(packet: str) -> dict:
     ...     'command': 'on',
     ... }
     True
+
     """
     node_id, _, protocol, attrs = packet.split(DELIM, 3)
 
@@ -123,6 +138,7 @@ def encode_packet(packet: dict) -> str:
     ...     'command': 'on',
     ... })
     '10;newkaku;000001;01;on;'
+
     """
     return SWITCH_COMMAND_TEMPLATE.format(
         node=PacketHeader.master.value,

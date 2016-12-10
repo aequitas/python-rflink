@@ -41,8 +41,10 @@ class ProtocolBase(asyncio.Protocol):
         """Assemble incoming data into per-line packets."""
         while "\r\n" in self.buffer:
             line, self.buffer = self.buffer.split("\r\n", 1)
-            if is_packet_header(0):
+            if is_packet_header(line):
                 self.handle_raw_packet(line)
+            else:
+                log.debug('dropping invalid data: %s', line)
 
     def handle_raw_packet(self, raw_packet: bytes) -> None:
         """Handle one raw incoming packet."""
@@ -63,8 +65,14 @@ class ProtocolBase(asyncio.Protocol):
 class PacketHandling(ProtocolBase):
     """Handle translating rflink packets to/from python primitives."""
 
-    def __init__(self, *args, packet_callback: Callable = None, **kwargs) -> None:
-        """Add packethandling specific initialization."""
+    def __init__(self, *args, packet_callback: Callable = None,
+                 **kwargs) -> None:
+        """Add packethandling specific initialization.
+
+        packet_callback: called with every complete/valid packet
+        received.
+
+        """
         super().__init__(*args, **kwargs)
         self.packet_callback = packet_callback
 
@@ -112,7 +120,8 @@ class PacketHandling(ProtocolBase):
 class CommandSerialization(ProtocolBase):
     """Logic for ensuring asynchronous commands are send in order."""
 
-    def __init__(self, *args, packet_callback: Callable = None, **kwargs) -> None:
+    def __init__(self, *args, packet_callback: Callable = None,
+                 **kwargs) -> None:
         """Add packethandling specific initialization."""
         super().__init__(*args, **kwargs)
         self.packet_callback = packet_callback
@@ -140,6 +149,18 @@ class CommandSerialization(ProtocolBase):
         # allow next command
         self._ready_to_send.release()
         return acknowledgement
+
+
+class EventHandling(PacketHandling):
+    """Breaks up packets into individual events with ids'.
+
+    Most packets represent a single event (light on, measured
+    temparature), but some contain multiple events (temperature and
+    humidity). This class adds logic to convert packets into individual
+    events each with their own id based on packet details (protocol,
+    switch, etc).
+
+    """
 
 
 class RflinkProtocol(PacketHandling, ProtocolBase):
