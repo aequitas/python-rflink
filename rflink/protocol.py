@@ -3,7 +3,7 @@ import asyncio
 import concurrent
 import logging
 from functools import partial
-from typing import Callable
+from typing import Callable, List
 
 from serial_asyncio import create_serial_connection
 
@@ -19,9 +19,12 @@ class ProtocolBase(asyncio.Protocol):
 
     transport = None  # type: asyncio.Transport
 
-    def __init__(self, loop) -> None:
+    def __init__(self, loop=None) -> None:
         """Initialize class."""
-        self.loop = loop
+        if loop:
+            self.loop = loop
+        else:
+            self.loop = None
         self.packet = ''
         self.buffer = ''
 
@@ -85,6 +88,8 @@ class PacketHandling(ProtocolBase):
         except:
             log.exception('failed to parse packet: %s', packet)
 
+        log.debug('decoded packet: %s', packet)
+
         if packet:
             if 'ok' in packet:
                 # handle response packets internally
@@ -98,8 +103,6 @@ class PacketHandling(ProtocolBase):
 
     def handle_packet(self, packet):
         """Process incoming packet dict and optionally call callback."""
-        log.debug('parsed packet: %s', packet)
-
         if self.packet_callback:
             # forward to callback
             self.packet_callback(packet)
@@ -161,6 +164,43 @@ class EventHandling(PacketHandling):
     switch, etc).
 
     """
+
+    def __init__(self, *args, event_callback: Callable = None,
+                 ignore: List[str] = None, **kwargs) -> None:
+        """Add eventhandling specific initialization."""
+        super().__init__(*args, **kwargs)
+        self.event_callback = event_callback
+        self.ignore = ignore
+
+    def _handle_packet(self, packet):
+        """Event specific packet handling logic."""
+
+    def handle_packet(self, packet):
+        """Apply event specific handling and pass on to packet handling."""
+        if self.event_callback:
+            self._handle_packet(packet)
+        super().handle_packet(packet)
+
+    def ignore_event(self, event_id):
+        """Verify event id against list of events to ignore.
+
+        >>> e = EventHandling(ignore=[
+        ...   'test1_00',
+        ...   'test2_*',
+        ... ])
+        >>> e.ignore_event('test1_00')
+        True
+        >>> e.ignore_event('test2_00')
+        True
+        >>> e.ignore_event('test3_00')
+        False
+
+        """
+        for ignore in self.ignore:
+            if (ignore == event_id or
+                    (ignore.endswith('*') and event_id.startswith(ignore[:-1]))):
+                return True
+        return False
 
 
 class RflinkProtocol(PacketHandling, ProtocolBase):

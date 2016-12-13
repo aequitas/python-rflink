@@ -6,7 +6,14 @@ from typing import Any, Callable, Dict, cast
 
 DELIM = ';'
 SWITCH_COMMAND_TEMPLATE = '{node};{protocol};{id};{switch};{command};'
-PACKET_HEADER_RE = '^(11;)?(10;[a-zA-Z]+;|20;[0-9A-Z]{2};([a-zA-Z]+;|Nodo))'
+
+PACKET_COMMAND = '10;[^;]+;[a-zA-Z0-9]+;'
+PACKET_OK = '^20;[0-9A-Z]{2};OK'
+PACKET_DEVICE = '20;[0-9A-Z]{2};[^;]+;'
+PACKET_DEVICE_CREATE = '^11;' + PACKET_DEVICE
+PACKET_DEVICE_RECEIVE = '^' + PACKET_DEVICE
+PACKET_HEADER_RE = '|'.join(
+    [PACKET_DEVICE_CREATE, PACKET_OK, PACKET_DEVICE_RECEIVE, PACKET_COMMAND])
 
 
 class PacketHeader(Enum):
@@ -49,15 +56,14 @@ def is_packet_header(packet: str) -> bool:
 
     >>> is_packet_header('20;3B;NewKaku;')
     True
-
-    >>> is_packet_header('10;Kaku;')
+    >>> is_packet_header('10;Kaku;000a1;')
     True
-
     >>> is_packet_header('11;20;0B;NewKaku;')
     True
-
-    >>> is_packet_header('20;B0;Auriol20;')
-    False
+    >>> is_packet_header('20;93;Alecto V1;')
+    True
+    >>> is_packet_header('20;08;UPM/Esic;ID=1003;RAIN=0010;BAT=OK;')
+    True
 
     """
     return bool(re.match(PACKET_HEADER_RE, packet))
