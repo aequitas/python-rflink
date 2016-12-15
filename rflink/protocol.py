@@ -7,7 +7,12 @@ from typing import Callable, List
 
 from serial_asyncio import create_serial_connection
 
-from .parser import decode_packet, encode_packet, is_packet_header
+from .parser import (
+    decode_packet,
+    encode_packet,
+    is_packet_header,
+    packet_events
+)
 
 log = logging.getLogger(__name__)
 
@@ -107,7 +112,7 @@ class PacketHandling(ProtocolBase):
             # forward to callback
             self.packet_callback(packet)
         else:
-            print(packet)
+            print('packet', packet)
 
     def send_packet(self, fields):
         """Concat fields and send packet to gateway."""
@@ -170,15 +175,28 @@ class EventHandling(PacketHandling):
         """Add eventhandling specific initialization."""
         super().__init__(*args, **kwargs)
         self.event_callback = event_callback
-        self.ignore = ignore
+        if ignore:
+            log.debug('ignoring: %s', ignore)
+            self.ignore = ignore
+        else:
+            self.ignore = []
 
     def _handle_packet(self, packet):
         """Event specific packet handling logic."""
+        events = packet_events(packet)
+
+        for event in events:
+            if self.ignore_event(event['id']):
+                log.debug('ignoring event with id: %s', event)
+                continue
+            if self.event_callback:
+                self.event_callback(event)
+            else:
+                print('event', event)
 
     def handle_packet(self, packet):
         """Apply event specific handling and pass on to packet handling."""
-        if self.event_callback:
-            self._handle_packet(packet)
+        self._handle_packet(packet)
         super().handle_packet(packet)
 
     def ignore_event(self, event_id):
@@ -203,7 +221,7 @@ class EventHandling(PacketHandling):
         return False
 
 
-class RflinkProtocol(PacketHandling, ProtocolBase):
+class RflinkProtocol(EventHandling, ProtocolBase):
     """Combine low and high level protocol handling."""
 
 
@@ -249,7 +267,12 @@ def create_rflink_connection(*args, **kwargs):
     # use default protocol if not specified
     rflink_protocol = kwargs.pop('protocol', RflinkProtocol)
     packet_callback = kwargs.pop('packet_callback', None)
-    protocol = partial(rflink_protocol, loop, packet_callback=packet_callback)
+    protocol = partial(
+        rflink_protocol,
+        loop,
+        packet_callback=packet_callback,
+        ignore=kwargs.pop('ignore')
+    )
 
     # setup serial connection if no transport specified
     host = kwargs.pop('host', None)

@@ -2,7 +2,7 @@
 
 import re
 from enum import Enum
-from typing import Any, Callable, Dict, cast
+from typing import Any, Callable, Dict, Generator, cast
 
 DELIM = ';'
 SWITCH_COMMAND_TEMPLATE = '{node};{protocol};{id};{switch};{command};'
@@ -150,3 +150,95 @@ def encode_packet(packet: dict) -> str:
         node=PacketHeader.master.value,
         **packet
     )
+
+
+# create lookup table of not easy to reverse protocol names
+translate_protocols = [
+    'Ikea Koppla',
+    'Alecto V1',
+    'Alecto V2',
+    'UPM/Esic',
+    'Oregon TempHygro',
+    'Oregon TempHygro',
+    'Oregon BTHR',
+    'Oregon Rain',
+    'Oregon Rain2',
+    'Oregon Wind',
+    'Oregon Wind2',
+    'Oregon UVN128/',
+    'Plieger York',
+    'Byron SX',
+]
+protocol_translations = {
+    p.lower(): re.sub(r'[^a-z0-9_]+', '', p.lower()) for p in translate_protocols
+}
+
+
+def serialize_packet_id(packet: dict) -> str:
+    """Serialize packet identifiers into one reversable string.
+
+    >>> serialize_packet_id({
+    ...     'protocol': 'newkaku',
+    ...     'id': '000001',
+    ...     'switch': '01',
+    ...     'command': 'on',
+    ... })
+    'newkaku_000001_01'
+    >>> serialize_packet_id({
+    ...     'protocol': 'ikea koppla',
+    ...     'id': '000080',
+    ...     'switch': '0',
+    ...     'command': 'on',
+    ... })
+    'ikeakoppla_000080_0'
+
+    """
+    # translate protocol in something reversable
+    protocol = protocol_translations.get(
+        packet['protocol'], packet['protocol'])
+
+    return '_'.join(filter(None, [
+        protocol,
+        packet['id'],
+        packet.get('switch', None),
+    ]))
+
+
+def packet_events(packet: dict) -> Generator:
+    """Return list of all events in the packet.
+
+    >>> x = list(packet_events({
+    ...     'protocol': 'alectov1',
+    ...     'id': 'ec02',
+    ...     'temperature': 1.0,
+    ...     'humidity': 10,
+    ... }))
+    >>> assert {
+    ...     'id': 'alectov1_ec02_temp',
+    ...     'temperature': 1.0,
+    ... } in x
+    >>> assert {
+    ...     'id': 'alectov1_ec02_hum',
+    ...     'humidity': 10,
+    ... } in x
+    >>> x = list(packet_events({
+    ...     'protocol': 'newkaku',
+    ...     'id': '000001',
+    ...     'switch': '01',
+    ...     'command': 'on',
+    ... }))
+    >>> assert {'id': 'newkaku_000001_01', 'command': 'on'} in x
+
+    """
+    field_abbrev = {v: k for k, v in PACKET_FIELDS.items()}
+
+    packet_id = serialize_packet_id(packet)
+    events = {f: v for f, v in packet.items() if f in field_abbrev}
+    if len(events) == 1:
+        yield dict(id=packet_id, **events)
+    else:
+        for field, value in events.items():
+            yield {
+                'id': packet_id + '_' + field_abbrev[field],
+                field: value,
+            }
