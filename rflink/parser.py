@@ -105,9 +105,9 @@ HSTATUS_LOOKUP = {
     '3': 'wet',
 }
 BFORECAST_LOOKUP = {
-    '0': 'no info',
+    '0': 'no_info',
     '1': 'sunny',
-    '2': 'partly cloudy',
+    '2': 'partly_cloudy',
     '3': 'cloudy',
     '4': 'rain',
 }
@@ -226,6 +226,9 @@ def decode_packet(packet: str) -> dict:
             value = VALUE_TRANSLATION.get(key)(value)
         name = PACKET_FIELDS.get(key, key)
         data[name] = value
+        unit = UNITS.get(key, None)
+        if unit:
+            data[name + '_unit'] = unit
 
     # correct KaKu device address
     if data.get('protocol', '') == 'kaku' and len(data['id']) != 6:
@@ -342,34 +345,45 @@ def packet_events(packet: dict) -> Generator:
     ...     'protocol': 'alectov1',
     ...     'id': 'ec02',
     ...     'temperature': 1.0,
+    ...     'temperature_unit': '°C',
     ...     'humidity': 10,
+    ...     'humidity_unit': '%',
     ... }))
     >>> assert {
     ...     'id': 'alectov1_ec02_temp',
-    ...     'temperature': 1.0,
+    ...     'sensor': 'temperature',
+    ...     'value': 1.0,
+    ...     'unit': '°C',
     ... } in x
     >>> assert {
     ...     'id': 'alectov1_ec02_hum',
-    ...     'humidity': 10,
+    ...     'sensor': 'humidity',
+    ...     'value': 10,
+    ...     'unit': '%',
     ... } in x
-    >>> x = list(packet_events({
+    >>> y = list(packet_events({
     ...     'protocol': 'newkaku',
     ...     'id': '000001',
     ...     'switch': '01',
     ...     'command': 'on',
     ... }))
-    >>> assert {'id': 'newkaku_000001_01', 'command': 'on'} in x
+    >>> assert {'id': 'newkaku_000001_01', 'command': 'on'} in y
 
     """
     field_abbrev = {v: k for k, v in PACKET_FIELDS.items()}
 
     packet_id = serialize_packet_id(packet)
     events = {f: v for f, v in packet.items() if f in field_abbrev}
-    if len(events) == 1:
+    if 'command' in events:
+        # switch events only have one event in each packet
         yield dict(id=packet_id, **events)
     else:
-        for field, value in events.items():
+        # sensors can have multiple
+        for sensor, value in events.items():
+            unit = packet.get(sensor + '_unit', None)
             yield {
-                'id': packet_id + PACKET_ID_SEP + field_abbrev[field],
-                field: value,
+                'id': packet_id + PACKET_ID_SEP + field_abbrev[sensor],
+                'sensor': sensor,
+                'value': value,
+                'unit': unit,
             }

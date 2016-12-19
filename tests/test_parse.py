@@ -15,7 +15,7 @@ from rflink.parser import (
         'humidity': 16, 'temperature': 20.7,
     }],
     ['20;36;Alecto V1;ID=0334;TEMP=800d;HUM=33;BAT=OK;', {
-        'temperature': -1.3
+        'temperature': -1.3, 'temperature_unit': '°C',
     }],
     ['20;08;UPM/Esic;ID=1003;RAIN=0010;BAT=OK;', {
         'battery': 'ok'
