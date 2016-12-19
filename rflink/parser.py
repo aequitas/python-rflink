@@ -194,21 +194,20 @@ def decode_packet(packet: str) -> dict:
     })
 
     # make exception for version response
+    data['protocol'] = 'unkown'
     if '=' in protocol:
         attrs = protocol + DELIM + attrs
-        protocol = 'version'
 
     # no attributes but instead the welcome banner
     elif 'RFLink Gateway' in protocol:
         data.update(parse_banner(protocol))
-        protocol = 'banner'
 
     elif protocol == 'PONG':
         data['ping'] = protocol.lower()
 
     # failure response
     elif protocol == 'CMD UNKNOWN':
-        data['response'] = 'command unknown'
+        data['response'] = 'command_unknown'
         data['ok'] = False
 
     # ok response
@@ -308,7 +307,7 @@ def serialize_packet_id(packet: dict) -> str:
 
     return '_'.join(filter(None, [
         protocol,
-        packet['id'],
+        packet.get('id', None),
         packet.get('switch', None),
     ]))
 

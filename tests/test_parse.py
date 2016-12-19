@@ -6,7 +6,8 @@ from rflink.parser import (
     PACKET_FIELDS,
     UNITS,
     VALUE_TRANSLATION,
-    decode_packet
+    decode_packet,
+    serialize_packet_id
 )
 
 
@@ -57,6 +58,10 @@ from rflink.parser import (
         'weather_forecast': 'sunny',
         'humidity_status': 'normal',
     }],
+    ['20;00;Nodo RadioFrequencyLink - RFLink Gateway V1.1 - R45;', {
+        'version': '1.1',
+        'revision': '45',
+    }]
 ])
 def test_packet_parsing(packet, expect):
     """Packet should be broken up into their primitives."""
@@ -64,6 +69,9 @@ def test_packet_parsing(packet, expect):
 
     for key, value in expect.items():
         assert result[key] == value
+
+    # make sure each packet is serialized without failure
+    packet_id = serialize_packet_id(result)
 
 
 def test_descriptions():
