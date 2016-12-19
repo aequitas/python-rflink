@@ -185,7 +185,12 @@ class EventHandling(PacketHandling):
             self.ignore = []
 
     def _handle_packet(self, packet):
-        """Event specific packet handling logic."""
+        """Event specific packet handling logic.
+
+        Break packet into events and fires configured event callback or
+        nicely prints events for console.
+
+        """
         events = packet_events(packet)
 
         for event in events:
@@ -196,7 +201,7 @@ class EventHandling(PacketHandling):
                 self.event_callback(event)
             else:
                 string = '{id:<32} '
-                if 'switch' in event:
+                if 'command' in event:
                     string += '{command}'
                 elif 'version' in event:
                     if 'hardware' in event:
