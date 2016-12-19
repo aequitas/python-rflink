@@ -26,12 +26,39 @@ class PacketHeader(Enum):
 
 
 PACKET_FIELDS = {
+    'awinsp': 'awindspeed',
+    'bat': 'battery',
+    'bforecast': 'weather_forecast',
     'cmd': 'command',
     'bat': 'battery',
-    'temp': 'temperature',
+    'dist': 'distance',
+    'kwatt': 'kilowatt',
+    'hstatus': 'humidity_status',
     'hum': 'humidity',
+    'kwatt': 'kilowatt',
     'rev': 'revision',
+    'temp': 'temperature',
+    'uv': 'uv',
     'ver': 'version',
+    'winchl': 'windchill',
+    'windir': 'winddirection',
+    'wings': 'windgusts',
+    'winsp': 'windspeed',
+    'wintmp': 'windtemp',
+}
+
+HSTATUS_LOOKUP = {
+    '0': 'normal',
+    '1': 'comfortable',
+    '2': 'dry',
+    '3': 'wet',
+}
+BFORECAST_LOOKUP = {
+    '0': 'no info',
+    '1': 'sunny',
+    '2': 'partly cloudy',
+    '3': 'cloudy',
+    '4': 'rain',
 }
 
 
@@ -44,9 +71,35 @@ def signed_to_float(hex: str) -> float:
 
 
 VALUE_TRANSLATION = cast(Dict[str, Callable], {
-    'temp': signed_to_float,
+    'awinsp': lambda hex: int(hex, 16) / 10,
+    'baro': lambda hex: int(hex, 16),
+    'bforecast': lambda x: BFORECAST_LOOKUP.get(x, 'Unknown'),
+    'chime': int,
+    'co2': int,
+    'current': int,
+    'current2': int,
+    'current3': int,
+    'dist': int,
+    'hstatus': lambda x: HSTATUS_LOOKUP.get(x, 'Unknown'),
     'hum': int,
+    'lux': lambda hex: int(hex, 16),
+    'meter': int,
+    'kwatt': lambda hex: int(hex, 16),
+    'sound': int,
+    'rain': lambda hex: int(hex, 16) / 10,
+    'rainrate': lambda hex: int(hex, 16) / 10,
+    'raintot': lambda hex: int(hex, 16) / 10,
+    'temp': signed_to_float,
+    'uv': lambda hex: int(hex, 16),
+    'volt': int,
+    'watt': lambda hex: int(hex, 16),
+    'winchl': signed_to_float,
+    'windir': lambda windir: int(windir) * 22.5,
+    'wings': lambda hex: int(hex, 16) / 10,
+    'winsp': lambda hex: int(hex, 16) / 10,
+    'wintmp': signed_to_float,
 })
+
 
 BANNER_RE = (r'(?P<hardware>[a-zA-Z\s]+) - (?P<firmware>[a-zA-Z\s]+) '
              r'V(?P<version>[0-9\.]+) - R(?P<revision>[0-9\.]+)')

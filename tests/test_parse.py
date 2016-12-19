@@ -47,6 +47,11 @@ from rflink.parser import decode_packet
     ['20;02;OK;', {
         'ok': True,
     }],
+    # no actual examples available, so these are made up from protocol spec
+    ['20;01;mock;ID=0;BFORECAST=1;HSTATUS=0', {
+        'weather_forecast': 'sunny',
+        'humidity_status': 'normal',
+    }],
 ])
 def test_packet_parsing(packet, expect):
     """Packet should be broken up into their primitives."""
