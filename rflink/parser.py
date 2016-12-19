@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, Generator, cast
 
 DELIM = ';'
 SWITCH_COMMAND_TEMPLATE = '{node};{protocol};{id};{switch};{command};'
+PACKET_ID_SEP = '_'
 
 PACKET_COMMAND = '10;[^;]+;[a-zA-Z0-9]+;'
 PACKET_OK = '^20;[0-9A-Z]{2};OK'
@@ -172,6 +173,7 @@ translate_protocols = [
 protocol_translations = {
     p.lower(): re.sub(r'[^a-z0-9_]+', '', p.lower()) for p in translate_protocols
 }
+rev_protocol_translations = {v: k for k, v in protocol_translations.items()}
 
 
 def serialize_packet_id(packet: dict) -> str:
@@ -202,6 +204,31 @@ def serialize_packet_id(packet: dict) -> str:
         packet['id'],
         packet.get('switch', None),
     ]))
+
+
+def deserialize_packet_id(packet_id: str) -> dict:
+    r"""Turn a packet id into individual packet components.
+
+    >>> deserialize_packet_id('newkaku_000001_01') == {
+    ...     'protocol': 'newkaku',
+    ...     'id': '000001',
+    ...     'switch': '01',
+    ... }
+    True
+    >>> deserialize_packet_id('ikeakoppla_000080_0') == {
+    ...     'protocol': 'ikea koppla',
+    ...     'id': '000080',
+    ...     'switch': '0',
+    ... }
+    True
+    """
+    protocol, _id, switch = packet_id.split(PACKET_ID_SEP, 3)
+
+    return {
+        'protocol': rev_protocol_translations.get(protocol, protocol),
+        'id': _id,
+        'switch': switch,
+    }
 
 
 def packet_events(packet: dict) -> Generator:
@@ -239,6 +266,6 @@ def packet_events(packet: dict) -> Generator:
     else:
         for field, value in events.items():
             yield {
-                'id': packet_id + '_' + field_abbrev[field],
+                'id': packet_id + PACKET_ID_SEP + field_abbrev[field],
                 field: value,
             }
