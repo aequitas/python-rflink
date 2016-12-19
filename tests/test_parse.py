@@ -2,7 +2,12 @@
 
 import pytest
 
-from rflink.parser import decode_packet
+from rflink.parser import (
+    PACKET_FIELDS,
+    UNITS,
+    VALUE_TRANSLATION,
+    decode_packet
+)
 
 
 @pytest.mark.parametrize('packet,expect', [
@@ -59,3 +64,15 @@ def test_packet_parsing(packet, expect):
 
     for key, value in expect.items():
         assert result[key] == value
+
+
+def test_descriptions():
+    """Every value translation should be paired with a description."""
+    for key in VALUE_TRANSLATION:
+        assert key in PACKET_FIELDS
+
+
+def test_units():
+    """Every description should have a unit available."""
+    for key in PACKET_FIELDS:
+        assert key in UNITS
