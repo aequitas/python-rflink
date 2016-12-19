@@ -175,6 +175,9 @@ class EventHandling(PacketHandling):
         """Add eventhandling specific initialization."""
         super().__init__(*args, **kwargs)
         self.event_callback = event_callback
+        # suppress printing of packets
+        if not kwargs.get('packet_callback'):
+            self.packet_callback = lambda x: None
         if ignore:
             log.debug('ignoring: %s', ignore)
             self.ignore = ignore
@@ -192,7 +195,19 @@ class EventHandling(PacketHandling):
             if self.event_callback:
                 self.event_callback(event)
             else:
-                print('event', event)
+                string = '{id:<32} '
+                if 'switch' in event:
+                    string += '{command}'
+                elif 'version' in event:
+                    if 'hardware' in event:
+                        string += '{hardware} {firmware} '
+                    string += 'V{version} R{revision}'
+                else:
+                    string += '{value}'
+                    if event.get('unit'):
+                        string += ' {unit}'
+
+                print(string.format(**event))
 
     def handle_packet(self, packet):
         """Apply event specific handling and pass on to packet handling."""
@@ -221,14 +236,10 @@ class EventHandling(PacketHandling):
         return False
 
 
-class RflinkProtocol(EventHandling, ProtocolBase):
-    """Combine low and high level protocol handling."""
-
-
-class InverterProtocol(RflinkProtocol):
+class InverterProtocol(PacketHandling):
     """Invert switch commands received and send them out."""
 
-    def handle_packet(self, packet):
+    def handle_event(self, packet):
         """Handle incoming packet from rflink gateway."""
         if packet.get('switch'):
             if packet['command'] == 'on':
@@ -245,7 +256,7 @@ class InverterProtocol(RflinkProtocol):
             self.loop.create_task(task)
 
 
-class RepeaterProtocol(RflinkProtocol):
+class RepeaterProtocol(PacketHandling):
     """Repeat switch commands received."""
 
     def handle_packet(self, packet):
@@ -265,7 +276,7 @@ def create_rflink_connection(*args, **kwargs):
     loop = kwargs.pop('loop', asyncio.get_event_loop())
 
     # use default protocol if not specified
-    rflink_protocol = kwargs.pop('protocol', RflinkProtocol)
+    rflink_protocol = kwargs.pop('protocol', EventHandling)
     packet_callback = kwargs.pop('packet_callback', None)
     protocol = partial(
         rflink_protocol,

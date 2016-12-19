@@ -4,6 +4,7 @@ import re
 from enum import Enum
 from typing import Any, Callable, Dict, Generator, cast
 
+UNKNOWN = 'unknown'
 DELIM = ';'
 SWITCH_COMMAND_TEMPLATE = '{node};{protocol};{id};{switch};{command};'
 PACKET_ID_SEP = '_'
@@ -37,8 +38,10 @@ PACKET_FIELDS = {
     'current2': 'current_phase_2',
     'current3': 'current_phase_3',
     'dist': 'distance',
+    'fw': 'firmware',
     'hstatus': 'humidity_status',
     'hum': 'humidity',
+    'hw': 'hardware',
     'kwatt': 'kilowatt',
     'lux': 'light_intensity',
     'meter': 'meter_value',
@@ -73,8 +76,10 @@ UNITS = {
     'current3': 'A',
     # depends on sensor
     'dist': None,
+    'fw': None,
     'hstatus': None,
     'hum': '%',
+    'hw': None,
     'kwatt': 'kW',
     'lux': 'lux',
     # depends on sensor
@@ -194,7 +199,7 @@ def decode_packet(packet: str) -> dict:
     })
 
     # make exception for version response
-    data['protocol'] = 'unkown'
+    data['protocol'] = UNKNOWN
     if '=' in protocol:
         attrs = protocol + DELIM + attrs
 
@@ -226,6 +231,7 @@ def decode_packet(packet: str) -> dict:
         name = PACKET_FIELDS.get(key, key)
         data[name] = value
         unit = UNITS.get(key, None)
+
         if unit:
             data[name + '_unit'] = unit
 
@@ -305,6 +311,9 @@ def serialize_packet_id(packet: dict) -> str:
     protocol = protocol_translations.get(
         packet['protocol'], packet['protocol'])
 
+    if protocol == UNKNOWN:
+        protocol = 'rflink'
+
     return '_'.join(filter(None, [
         protocol,
         packet.get('id', None),
@@ -328,13 +337,21 @@ def deserialize_packet_id(packet_id: str) -> dict:
     ... }
     True
     """
-    protocol, _id, switch = packet_id.split(PACKET_ID_SEP, 3)
+    if packet_id == 'rflink':
+        return {'protocol': UNKNOWN}
 
-    return {
+    protocol, *id_switch = packet_id.split(PACKET_ID_SEP)
+    assert len(id_switch) < 3
+
+    packet_identifiers = {
         'protocol': rev_protocol_translations.get(protocol, protocol),
-        'id': _id,
-        'switch': switch,
     }
+    if id_switch:
+        packet_identifiers['id'] = id_switch[0]
+    if len(id_switch) > 1:
+        packet_identifiers['switch'] = id_switch[1]
+
+    return packet_identifiers
 
 
 def packet_events(packet: dict) -> Generator:
@@ -373,7 +390,7 @@ def packet_events(packet: dict) -> Generator:
 
     packet_id = serialize_packet_id(packet)
     events = {f: v for f, v in packet.items() if f in field_abbrev}
-    if 'command' in events:
+    if 'command' in events or 'version' in events:
         # switch events only have one event in each packet
         yield dict(id=packet_id, **events)
     else:

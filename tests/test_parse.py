@@ -7,6 +7,7 @@ from rflink.parser import (
     UNITS,
     VALUE_TRANSLATION,
     decode_packet,
+    deserialize_packet_id,
     serialize_packet_id
 )
 
@@ -47,7 +48,7 @@ from rflink.parser import (
           'setmysensors': 'off',
     }],
     ['20;01;CMD UNKNOWN;', {
-        'response': 'command unknown',
+        'response': 'command_unknown',
         'ok': False,
     }],
     ['20;02;OK;', {
@@ -61,6 +62,8 @@ from rflink.parser import (
     ['20;00;Nodo RadioFrequencyLink - RFLink Gateway V1.1 - R45;', {
         'version': '1.1',
         'revision': '45',
+        'hardware': 'Nodo RadioFrequencyLink',
+        'firmware': 'RFLink Gateway',
     }]
 ])
 def test_packet_parsing(packet, expect):
@@ -72,6 +75,13 @@ def test_packet_parsing(packet, expect):
 
     # make sure each packet is serialized without failure
     packet_id = serialize_packet_id(result)
+
+    # and deserialize it again
+    packet_identifiers = deserialize_packet_id(packet_id)
+
+    original = set(result.items())
+    transserialized = set(packet_identifiers.items())
+    assert transserialized.issubset(original)
 
 
 def test_descriptions():

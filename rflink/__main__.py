@@ -10,7 +10,7 @@ Options:
                        or TCP port in TCP mode.
   --baud=<baud>      Serial baud rate [default: 57600].
   --host=<host>      TCP mode, connect to host instead of serial port.
-  -m=<handling>      How to handle incoming packets [default: print].
+  -m=<handling>      How to handle incoming packets [default: event].
   --ignore=<ignore>  List of device ids to ignore, end with * to match wildcard.
   -h --help          Show this screen.
   -v                 Increase verbosity
@@ -26,14 +26,16 @@ import pkg_resources
 from docopt import docopt
 
 from .protocol import (
+    EventHandling,
     InverterProtocol,
+    PacketHandling,
     RepeaterProtocol,
-    RflinkProtocol,
     create_rflink_connection
 )
 
 PROTOCOLS = {
-    'print': RflinkProtocol,
+    'event': EventHandling,
+    'print': PacketHandling,
     'invert': InverterProtocol,
     'repeat': RepeaterProtocol,
 }

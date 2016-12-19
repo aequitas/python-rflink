@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from rflink.protocol import RflinkProtocol
+from rflink.protocol import PacketHandling
 
 COMPLETE_PACKET = b'20;E0;NewKaku;ID=cac142;SWITCH=1;CMD=ALLOFF;\r\n'
 INCOMPLETE_PART1 = b'20;E0;NewKaku;ID=cac'
@@ -22,8 +22,8 @@ COMPLETE_PACKET_DICT = {
 @pytest.fixture
 def protocol(monkeypatch):
     """Rflinkprotocol instance with mocked handle_packet."""
-    monkeypatch.setattr(RflinkProtocol, 'handle_packet', Mock())
-    return RflinkProtocol(None)
+    monkeypatch.setattr(PacketHandling, 'handle_packet', Mock())
+    return PacketHandling(None)
 
 
 def test_complete_packet(protocol):
