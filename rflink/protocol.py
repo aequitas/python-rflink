@@ -283,10 +283,12 @@ def create_rflink_connection(*args, **kwargs):
     # use default protocol if not specified
     rflink_protocol = kwargs.pop('protocol', EventHandling)
     packet_callback = kwargs.pop('packet_callback', None)
+    event_callback = kwargs.pop('event_callback', None)
     protocol = partial(
         rflink_protocol,
         loop,
         packet_callback=packet_callback,
+        event_callback=event_callback,
         ignore=kwargs.pop('ignore')
     )
 
