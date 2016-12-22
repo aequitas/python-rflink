@@ -197,6 +197,7 @@ class EventHandling(PacketHandling):
             if self.ignore_event(event['id']):
                 log.debug('ignoring event with id: %s', event)
                 continue
+            log.debug('got event: %s', event)
             if self.event_callback:
                 self.event_callback(event)
             else:
