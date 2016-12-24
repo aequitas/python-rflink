@@ -9,6 +9,7 @@ from serial_asyncio import create_serial_connection
 
 from .parser import (
     decode_packet,
+    deserialize_packet_id,
     encode_packet,
     is_packet_header,
     packet_events
@@ -118,9 +119,10 @@ class PacketHandling(ProtocolBase):
         """Concat fields and send packet to gateway."""
         self.send_raw_packet(encode_packet(fields))
 
-    def send_command(self, protocol, address, switch, action):
+    def send_command(self, device_id, action):
         """Send device command to rflink gateway."""
-        command = [protocol, address, switch, action]
+        command = deserialize_packet_id(device_id)
+        command['command'] = action
         log.debug('sending command: %s', command)
         self.send_packet(command)
 
@@ -137,13 +139,13 @@ class CommandSerialization(ProtocolBase):
         self._ready_to_send = asyncio.Lock()
 
     @asyncio.coroutine
-    def send_command_ack(self, protocol, address, switch, action):
+    def send_command_ack(self, device_id, action):
         """Send command, wait for gateway to repond with acknowledgment."""
         # serialize commands
         yield from self._ready_to_send.acquire()
 
         self._command_ack.clear()
-        self.send_command(protocol, address, switch, action)
+        self.send_command(device_id, action)
 
         log.debug('waiting for acknowledgement')
         try:
