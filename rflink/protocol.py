@@ -244,6 +244,10 @@ class EventHandling(PacketHandling):
         return False
 
 
+class RflinkProtocol(CommandSerialization, EventHandling):
+    """Combine preferred abstractions that form complete Rflink interface."""
+
+
 class InverterProtocol(PacketHandling):
     """Invert switch commands received and send them out."""
 
@@ -284,7 +288,7 @@ def create_rflink_connection(*args, **kwargs):
     loop = kwargs.pop('loop', asyncio.get_event_loop())
 
     # use default protocol if not specified
-    rflink_protocol = kwargs.pop('protocol', EventHandling)
+    rflink_protocol = kwargs.pop('protocol', RflinkProtocol)
     packet_callback = kwargs.pop('packet_callback', None)
     event_callback = kwargs.pop('event_callback', None)
     protocol = partial(
