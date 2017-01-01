@@ -61,8 +61,8 @@ class ProtocolBase(asyncio.Protocol):
 
     def send_raw_packet(self, packet: str):
         """Encode and put packet string onto write buffer."""
-        data = packet + r'\r\n'
-        log.debug('writing data: %s', data)
+        data = packet + '\r\n'
+        log.debug('writing data: %s', repr(data))
         self.transport.write(data.encode())
 
     def connection_lost(self, exc):
@@ -203,19 +203,23 @@ class EventHandling(PacketHandling):
             if self.event_callback:
                 self.event_callback(event)
             else:
-                string = '{id:<32} '
-                if 'command' in event:
-                    string += '{command}'
-                elif 'version' in event:
-                    if 'hardware' in event:
-                        string += '{hardware} {firmware} '
-                    string += 'V{version} R{revision}'
-                else:
-                    string += '{value}'
-                    if event.get('unit'):
-                        string += ' {unit}'
+                self.handle_event(event)
 
-                print(string.format(**event))
+    def handle_event(self, event):
+        """Default handling of incoming event (print)."""
+        string = '{id:<32} '
+        if 'command' in event:
+            string += '{command}'
+        elif 'version' in event:
+            if 'hardware' in event:
+                string += '{hardware} {firmware} '
+            string += 'V{version} R{revision}'
+        else:
+            string += '{value}'
+            if event.get('unit'):
+                string += ' {unit}'
+
+        print(string.format(**event))
 
     def handle_packet(self, packet):
         """Apply event specific handling and pass on to packet handling."""
@@ -248,38 +252,28 @@ class RflinkProtocol(CommandSerialization, EventHandling):
     """Combine preferred abstractions that form complete Rflink interface."""
 
 
-class InverterProtocol(PacketHandling):
+class InverterProtocol(RflinkProtocol):
     """Invert switch commands received and send them out."""
 
-    def handle_event(self, packet):
+    def handle_event(self, event):
         """Handle incoming packet from rflink gateway."""
-        if packet.get('switch'):
-            if packet['command'] == 'on':
+        if event.get('command'):
+            if event['command'] == 'on':
                 cmd = 'off'
             else:
                 cmd = 'on'
 
-            task = self.send_command_ack(
-                packet['protocol'],
-                packet['id'],
-                packet['switch'],
-                cmd
-            )
+            task = self.send_command_ack(event['id'], cmd)
             self.loop.create_task(task)
 
 
-class RepeaterProtocol(PacketHandling):
+class RepeaterProtocol(RflinkProtocol):
     """Repeat switch commands received."""
 
-    def handle_packet(self, packet):
+    def handle_event(self, packet):
         """Handle incoming packet from rflink gateway."""
-        if packet.get('switch'):
-            task = self.send_command_ack(
-                packet['protocol'],
-                packet['id'],
-                packet['switch'],
-                packet['command']
-            )
+        if packet.get('command'):
+            task = self.send_command_ack(packet['id'], packet['command'])
             self.loop.create_task(task)
 
 
@@ -296,7 +290,7 @@ def create_rflink_connection(*args, **kwargs):
         loop,
         packet_callback=packet_callback,
         event_callback=event_callback,
-        ignore=kwargs.pop('ignore')
+        ignore=kwargs.pop('ignore', [])
     )
 
     # setup serial connection if no transport specified

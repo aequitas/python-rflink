@@ -59,7 +59,7 @@ def main(argv=sys.argv[1:], loop=None):
     if args['--ignore']:
         ignore = args['--ignore'].split(',')
     else:
-        ignore = ''
+        ignore = []
 
     protocol = PROTOCOLS[args['-m']]
     conn = create_rflink_connection(
