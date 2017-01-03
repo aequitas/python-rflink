@@ -66,9 +66,11 @@ class ProtocolBase(asyncio.Protocol):
         self.transport.write(data.encode())
 
     def connection_lost(self, exc):
-        """Stop when connection is lost."""
-        log.error('disconnected')
-        self.loop.stop()
+        """Log when connection is closed, if needed call callback."""
+        if exc:
+            log.exception('disconnected due to exception')
+        else:
+            log.info('disconnected because of close/abort.')
 
 
 class PacketHandling(ProtocolBase):
