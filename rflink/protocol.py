@@ -25,7 +25,7 @@ class ProtocolBase(asyncio.Protocol):
 
     transport = None  # type: asyncio.Transport
 
-    def __init__(self, loop=None) -> None:
+    def __init__(self, loop=None, disconnect_callback=None) -> None:
         """Initialize class."""
         if loop:
             self.loop = loop
@@ -33,6 +33,7 @@ class ProtocolBase(asyncio.Protocol):
             self.loop = None
         self.packet = ''
         self.buffer = ''
+        self.disconnect_callback = disconnect_callback
 
     def connection_made(self, transport):
         """Just logging for now."""
@@ -71,6 +72,8 @@ class ProtocolBase(asyncio.Protocol):
             log.exception('disconnected due to exception')
         else:
             log.info('disconnected because of close/abort.')
+        if self.disconnect_callback:
+            self.disconnect_callback(exc)
 
 
 class PacketHandling(ProtocolBase):
