@@ -296,11 +296,13 @@ def create_rflink_connection(*args, **kwargs):
     rflink_protocol = kwargs.pop('protocol', RflinkProtocol)
     packet_callback = kwargs.pop('packet_callback', None)
     event_callback = kwargs.pop('event_callback', None)
+    disconnect_callback = kwargs.pop('disconnect_callback', None)
     protocol = partial(
         rflink_protocol,
         loop,
         packet_callback=packet_callback,
         event_callback=event_callback,
+        disconnect_callback=disconnect_callback,
         ignore=kwargs.pop('ignore', [])
     )
 
