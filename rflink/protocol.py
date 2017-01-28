@@ -288,31 +288,25 @@ class RepeaterProtocol(RflinkProtocol):
             self.loop.create_task(task)
 
 
-def create_rflink_connection(*args, **kwargs):
+def create_rflink_connection(port=None, host=None, baud=57600, protocol=RflinkProtocol,
+                             packet_callback=None, event_callback=None,
+                             disconnect_callback=None, ignore=None, loop=None):
     """Create Rflink manager class, returns transport coroutine."""
-    loop = kwargs.pop('loop', asyncio.get_event_loop())
-
     # use default protocol if not specified
-    rflink_protocol = kwargs.pop('protocol', RflinkProtocol)
-    packet_callback = kwargs.pop('packet_callback', None)
-    event_callback = kwargs.pop('event_callback', None)
-    disconnect_callback = kwargs.pop('disconnect_callback', None)
     protocol = partial(
-        rflink_protocol,
-        loop,
+        protocol,
+        loop=loop if loop else asyncio.get_event_loop(),
         packet_callback=packet_callback,
         event_callback=event_callback,
         disconnect_callback=disconnect_callback,
-        ignore=kwargs.pop('ignore', [])
+        ignore=ignore if ignore else [],
     )
 
     # setup serial connection if no transport specified
-    host = kwargs.pop('host', None)
-    port = kwargs.pop('port')
     if host:
         conn = loop.create_connection(protocol, host, port)
     else:
-        baud = kwargs.get('baud', 57600)
+        baud = baud
         conn = create_serial_connection(loop, protocol, port, baud)
 
     return conn
