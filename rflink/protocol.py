@@ -145,21 +145,27 @@ class CommandSerialization(ProtocolBase):
         """Send command, wait for gateway to repond with acknowledgment."""
         # serialize commands
         yield from self._ready_to_send.acquire()
-
-        self._command_ack.clear()
-        self.send_command(device_id, action)
-
-        log.debug('waiting for acknowledgement')
+        acknowledgement = None
         try:
-            yield from asyncio.wait_for(self._command_ack.wait(), TIMEOUT)
-            log.debug('packet acknowledged')
-        except concurrent.futures._base.TimeoutError:
-            acknowledgement = {'ok': False, 'message': 'timeout'}
-            log.warning('acknowledge timeout')
-        else:
-            acknowledgement = self._last_ack.get('ok', False)
-        # allow next command
-        self._ready_to_send.release()
+            self._command_ack.clear()
+            self.send_command(device_id, action)
+
+            log.debug('waiting for acknowledgement')
+            try:
+                yield from asyncio.wait_for(self._command_ack.wait(), TIMEOUT)
+                log.debug('packet acknowledged')
+            except concurrent.futures._base.TimeoutError:
+                acknowledgement = {'ok': False, 'message': 'timeout'}
+                log.warning('acknowledge timeout')
+            else:
+                acknowledgement = self._last_ack.get('ok', False)
+        except:
+            if not acknowledgement:
+                acknowledgement = {'ok': False, 'message': 'error'}
+        finally:
+            # allow next command
+            self._ready_to_send.release()
+
         return acknowledgement
 
 
