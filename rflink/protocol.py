@@ -162,9 +162,6 @@ class CommandSerialization(ProtocolBase):
                 log.warning('acknowledge timeout')
             else:
                 acknowledgement = self._last_ack.get('ok', False)
-        except:
-            if not acknowledgement:
-                acknowledgement = {'ok': False, 'message': 'error'}
         finally:
             # allow next command
             self._ready_to_send.release()
