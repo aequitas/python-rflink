@@ -1,6 +1,7 @@
 """Parsers."""
 
 import re
+from collections import defaultdict
 from enum import Enum
 from typing import Any, Callable, Dict, Generator, cast
 
@@ -278,14 +279,25 @@ translate_protocols = [
     'Oregon Rain2',
     'Oregon Wind',
     'Oregon Wind2',
-    'Oregon UVN128/',
+    'Oregon UVN128/138',
     'Plieger York',
     'Byron SX',
 ]
-protocol_translations = {
-    p.lower(): re.sub(r'[^a-z0-9_]+', '', p.lower()) for p in translate_protocols
-}
-rev_protocol_translations = {v: k for k, v in protocol_translations.items()}
+
+
+class TranslationsDict(defaultdict):
+    """Generate translations for Rflink protocols to serializable names."""
+
+    def __missing__(self, key):
+        """If translation does not exist yet add it and its reverse."""
+        value = re.sub(r'[^a-z0-9_]+', '', key.lower())
+        self[key.lower()] = value
+        self[value] = key.lower()
+        return value
+
+
+protocol_translations = TranslationsDict(None)
+[protocol_translations[protocol] for protocol in translate_protocols]
 
 
 def serialize_packet_id(packet: dict) -> str:
@@ -305,11 +317,19 @@ def serialize_packet_id(packet: dict) -> str:
     ...     'command': 'on',
     ... })
     'ikeakoppla_000080_0'
+    >>> # unserializeable protocol name without explicit entry
+    >>> # in translation table should be properly serialized
+    >>> serialize_packet_id({
+    ...     'protocol': 'alecto v4',
+    ...     'id': '000080',
+    ...     'switch': '0',
+    ...     'command': 'on',
+    ... })
+    'alectov4_000080_0'
 
     """
     # translate protocol in something reversable
-    protocol = protocol_translations.get(
-        packet['protocol'], packet['protocol'])
+    protocol = protocol_translations[packet['protocol']]
 
     if protocol == UNKNOWN:
         protocol = 'rflink'
@@ -344,7 +364,11 @@ def deserialize_packet_id(packet_id: str) -> dict:
     assert len(id_switch) < 3
 
     packet_identifiers = {
-        'protocol': rev_protocol_translations.get(protocol, protocol),
+        # lookup the reverse translation of the protocol in the translation
+        # table, fallback to protocol. If this is a unserializable protocol
+        # name, it has not been serialized before and is not in the
+        # translate_protocols table this will result in an invalid command.
+        'protocol': protocol_translations.get(protocol, protocol),
     }
     if id_switch:
         packet_identifiers['id'] = id_switch[0]
@@ -358,7 +382,7 @@ def packet_events(packet: dict) -> Generator:
     """Return list of all events in the packet.
 
     >>> x = list(packet_events({
-    ...     'protocol': 'alectov1',
+    ...     'protocol': 'alecto v1',
     ...     'id': 'ec02',
     ...     'temperature': 1.0,
     ...     'temperature_unit': '°C',
