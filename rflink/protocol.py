@@ -30,7 +30,7 @@ class ProtocolBase(asyncio.Protocol):
         if loop:
             self.loop = loop
         else:
-            self.loop = None
+            self.loop = asyncio.get_event_loop()
         self.packet = ''
         self.buffer = ''
         self.disconnect_callback = disconnect_callback
@@ -140,8 +140,8 @@ class CommandSerialization(ProtocolBase):
         """Add packethandling specific initialization."""
         super().__init__(*args, **kwargs)
         self.packet_callback = packet_callback
-        self._command_ack = asyncio.Event()
-        self._ready_to_send = asyncio.Lock()
+        self._command_ack = asyncio.Event(loop=self.loop)
+        self._ready_to_send = asyncio.Lock(loop=self.loop)
 
     @asyncio.coroutine
     def send_command_ack(self, device_id, action):
@@ -155,7 +155,7 @@ class CommandSerialization(ProtocolBase):
 
             log.debug('waiting for acknowledgement')
             try:
-                yield from asyncio.wait_for(self._command_ack.wait(), TIMEOUT)
+                yield from asyncio.wait_for(self._command_ack.wait(), TIMEOUT, loop=self.loop)
                 log.debug('packet acknowledged')
             except concurrent.futures._base.TimeoutError:
                 acknowledgement = {'ok': False, 'message': 'timeout'}
