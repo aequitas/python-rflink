@@ -2,6 +2,7 @@
 import asyncio
 import concurrent
 import logging
+from datetime import timedelta
 from functools import partial
 from typing import Callable, List
 
@@ -17,7 +18,7 @@ from .parser import (
 
 log = logging.getLogger(__name__)
 
-TIMEOUT = 5
+TIMEOUT = timedelta(seconds=5)
 
 
 class ProtocolBase(asyncio.Protocol):
@@ -155,7 +156,7 @@ class CommandSerialization(ProtocolBase):
 
             log.debug('waiting for acknowledgement')
             try:
-                yield from asyncio.wait_for(self._command_ack.wait(), TIMEOUT, loop=self.loop)
+                yield from asyncio.wait_for(self._command_ack.wait(), TIMEOUT.seconds, loop=self.loop)
                 log.debug('packet acknowledged')
             except concurrent.futures._base.TimeoutError:
                 acknowledgement = {'ok': False, 'message': 'timeout'}
