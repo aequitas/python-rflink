@@ -2,7 +2,7 @@
 
 Usage:
   rflink [-v | -vv] [options]
-  rflink [-v | -vv] [options] ( on | off) <id>
+  rflink [-v | -vv] [options] [--repeat <repeat>] ( on | off) <id>
   rflink (-h | --help)
   rflink --version
 
@@ -11,6 +11,7 @@ Options:
                        or TCP port in TCP mode.
   --baud=<baud>      Serial baud rate [default: 57600].
   --host=<host>      TCP mode, connect to host instead of serial port.
+  --repeat=<repeat>  How often to repeat a command [default: 1].
   -m=<handling>      How to handle incoming packets [default: event].
   --ignore=<ignore>  List of device ids to ignore, end with * to match wildcard.
   -h --help          Show this screen.
@@ -89,9 +90,10 @@ def main(argv=sys.argv[1:], loop=None):
 
     try:
         if command:
-            loop.run_until_complete(
-                protocol.send_command_ack(
-                    args['<id>'], command))
+            for _ in range(int(args['--repeat'])):
+                loop.run_until_complete(
+                    protocol.send_command_ack(
+                        args['<id>'], command))
         else:
             loop.run_forever()
     except KeyboardInterrupt:
