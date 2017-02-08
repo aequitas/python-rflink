@@ -2,6 +2,7 @@
 
 Usage:
   rflink [-v | -vv] [options]
+  rflink [-v | -vv] [options] ( on | off) <id>
   rflink (-h | --help)
   rflink --version
 
@@ -30,10 +31,12 @@ from .protocol import (
     InverterProtocol,
     PacketHandling,
     RepeaterProtocol,
+    RflinkProtocol,
     create_rflink_connection
 )
 
 PROTOCOLS = {
+    'command': RflinkProtocol,
     'event': EventHandling,
     'print': PacketHandling,
     'invert': InverterProtocol,
@@ -61,7 +64,18 @@ def main(argv=sys.argv[1:], loop=None):
     else:
         ignore = []
 
-    protocol = PROTOCOLS[args['-m']]
+    if args['on']:
+        command = 'on'
+    elif args['off']:
+        command = 'off'
+    else:
+        command = None
+
+    if command:
+        protocol = PROTOCOLS['command']
+    else:
+        protocol = PROTOCOLS[args['-m']]
+
     conn = create_rflink_connection(
         protocol=protocol,
         host=args['--host'],
@@ -74,7 +88,12 @@ def main(argv=sys.argv[1:], loop=None):
     transport, protocol = loop.run_until_complete(conn)
 
     try:
-        loop.run_forever()
+        if command:
+            loop.run_until_complete(
+                protocol.send_command_ack(
+                    args['<id>'], command))
+        else:
+            loop.run_forever()
     except KeyboardInterrupt:
         # cleanup connection
         transport.close()
