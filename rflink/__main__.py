@@ -2,7 +2,7 @@
 
 Usage:
   rflink [-v | -vv] [options]
-  rflink [-v | -vv] [options] [--repeat <repeat>] ( on | off) <id>
+  rflink [-v | -vv] [options] [--repeat <repeat>] (on | off | allon | alloff) <id>
   rflink (-h | --help)
   rflink --version
 
@@ -17,7 +17,6 @@ Options:
   -h --help          Show this screen.
   -v                 Increase verbosity
   --version          Show version.
-
 """
 
 import asyncio
@@ -44,6 +43,8 @@ PROTOCOLS = {
     'repeat': RepeaterProtocol,
 }
 
+ALL_COMMANDS = ['on', 'off', 'allon', 'alloff']
+
 
 def main(argv=sys.argv[1:], loop=None):
     """Parse argument and setup main program loop."""
@@ -65,12 +66,7 @@ def main(argv=sys.argv[1:], loop=None):
     else:
         ignore = []
 
-    if args['on']:
-        command = 'on'
-    elif args['off']:
-        command = 'off'
-    else:
-        command = None
+    command = next((c for c in ALL_COMMANDS if args[c] is True), None)
 
     if command:
         protocol = PROTOCOLS['command']
