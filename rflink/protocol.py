@@ -12,8 +12,8 @@ from .parser import (
     decode_packet,
     deserialize_packet_id,
     encode_packet,
-    is_packet_header,
-    packet_events
+    packet_events,
+    valid_packet
 )
 
 log = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class ProtocolBase(asyncio.Protocol):
         """Assemble incoming data into per-line packets."""
         while "\r\n" in self.buffer:
             line, self.buffer = self.buffer.split("\r\n", 1)
-            if is_packet_header(line):
+            if valid_packet(line):
                 self.handle_raw_packet(line)
             else:
                 log.debug('dropping invalid data: %s', line)
@@ -86,7 +86,6 @@ class PacketHandling(ProtocolBase):
 
         packet_callback: called with every complete/valid packet
         received.
-
         """
         super().__init__(*args, **kwargs)
         self.packet_callback = packet_callback
@@ -156,7 +155,8 @@ class CommandSerialization(ProtocolBase):
 
             log.debug('waiting for acknowledgement')
             try:
-                yield from asyncio.wait_for(self._command_ack.wait(), TIMEOUT.seconds, loop=self.loop)
+                yield from asyncio.wait_for(self._command_ack.wait(),
+                                            TIMEOUT.seconds, loop=self.loop)
                 log.debug('packet acknowledged')
             except concurrent.futures._base.TimeoutError:
                 acknowledgement = {'ok': False, 'message': 'timeout'}
@@ -178,7 +178,6 @@ class EventHandling(PacketHandling):
     humidity). This class adds logic to convert packets into individual
     events each with their own id based on packet details (protocol,
     switch, etc).
-
     """
 
     def __init__(self, *args, event_callback: Callable = None,
@@ -200,7 +199,6 @@ class EventHandling(PacketHandling):
 
         Break packet into events and fires configured event callback or
         nicely prints events for console.
-
         """
         events = packet_events(packet)
 
@@ -248,7 +246,6 @@ class EventHandling(PacketHandling):
         True
         >>> e.ignore_event('test3_00')
         False
-
         """
         for ignore in self.ignore:
             if (ignore == event_id or

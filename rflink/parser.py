@@ -6,17 +6,48 @@ from enum import Enum
 from typing import Any, Callable, Dict, Generator, cast
 
 UNKNOWN = 'unknown'
-DELIM = ';'
 SWITCH_COMMAND_TEMPLATE = '{node};{protocol};{id};{switch};{command};'
 PACKET_ID_SEP = '_'
 
-PACKET_COMMAND = '10;[^;]+;[a-zA-Z0-9]+;'
-PACKET_OK = '^20;[0-9A-Z]{2};OK'
-PACKET_DEVICE = '20;[0-9A-Z]{2};[^;]+;'
-PACKET_DEVICE_CREATE = '^11;' + PACKET_DEVICE
-PACKET_DEVICE_RECEIVE = '^' + PACKET_DEVICE
-PACKET_HEADER_RE = '|'.join(
-    [PACKET_DEVICE_CREATE, PACKET_OK, PACKET_DEVICE_RECEIVE, PACKET_COMMAND])
+# contruct regex to validate packets before parsing
+DELIM = ';'
+SEQUENCE = '[0-9a-zA-Z]{2}'
+PROTOCOL = '[^;]{3,}'
+ADDRESS = '[0-9a-zA-Z]+'
+BUTTON = '[0-9a-zA-Z]+'
+VALUE = '[0-9a-zA-Z]+'
+COMMAND = '[0-9a-zA-Z]+'
+CONTROL_COMMAND = '[A-Z]+(=[A-Z0-9]+)?'
+DATA = '[a-zA-Z0-9;=_]+'
+RESPONSES = 'OK'
+VERSION = '[0-9a-zA-Z\ \.-]+'
+
+# 10;NewKaku;0cac142;3;ON;
+PACKET_COMMAND = DELIM.join(['10', PROTOCOL, ADDRESS, BUTTON, COMMAND])
+# 10;MiLightv1;F746;00;3c00;ON;
+PACKET_COMMAND2 = DELIM.join(['10', PROTOCOL, ADDRESS, BUTTON, VALUE, COMMAND])
+# 10;MERTIK;64;UP;
+PACKET_COMMAND3 = DELIM.join(['10', PROTOCOL, ADDRESS, COMMAND])
+# 10;DELTRONIC;001c33;
+PACKET_COMMAND4 = DELIM.join(['10', PROTOCOL, ADDRESS])
+
+# 10;REBOOT;/10;RTSRECCLEAN=9;
+PACKET_CONTROL = DELIM.join(['10', CONTROL_COMMAND])
+
+# 20;D3;OK;
+PACKET_RESPONSE = DELIM.join(['20', SEQUENCE, RESPONSES])
+# 20;06;NewKaku;ID=008440e6;SWITCH=a;CMD=OFF;
+PACKET_DEVICE = DELIM.join(['20', SEQUENCE, PROTOCOL, DATA])
+# 20;00;Nodo RadioFrequencyLink - RFLink Gateway V1.1 - R46;
+PACKET_VERSION = DELIM.join(['20', SEQUENCE, VERSION])
+
+# 11;20;0B;NewKaku;ID=000005;SWITCH=2;CMD=ON;
+PACKET_DEVICE_CREATE = '11;' + PACKET_DEVICE
+
+PACKET_HEADER_RE = '^(' + '|'.join(
+    [PACKET_VERSION, PACKET_DEVICE_CREATE, PACKET_RESPONSE, PACKET_DEVICE,
+     PACKET_COMMAND, PACKET_COMMAND2, PACKET_COMMAND3, PACKET_COMMAND4, PACKET_CONTROL]) + ');$'
+packet_header_re = re.compile(PACKET_HEADER_RE)
 
 
 class PacketHeader(Enum):
@@ -162,22 +193,16 @@ BANNER_RE = (r'(?P<hardware>[a-zA-Z\s]+) - (?P<firmware>[a-zA-Z\s]+) '
              r'V(?P<version>[0-9\.]+) - R(?P<revision>[0-9\.]+)')
 
 
-def is_packet_header(packet: str) -> bool:
-    """Tell if string begins with packet header.
+def valid_packet(packet: str) -> bool:
+    """Verify if packet is valid.
 
-    >>> is_packet_header('20;3B;NewKaku;')
+    >>> valid_packet('20;08;UPM/Esic;ID=1003;RAIN=0010;BAT=OK;')
     True
-    >>> is_packet_header('10;Kaku;000a1;')
-    True
-    >>> is_packet_header('11;20;0B;NewKaku;')
-    True
-    >>> is_packet_header('20;93;Alecto V1;')
-    True
-    >>> is_packet_header('20;08;UPM/Esic;ID=1003;RAIN=0010;BAT=OK;')
-    True
-
+    >>> # invalid packet due to leftovers in serial buffer
+    >>> valid_packet('20;00;N20;00;Nodo RadioFrequencyLink - RFLink Gateway V1.1 - R45')
+    False
     """
-    return bool(re.match(PACKET_HEADER_RE, packet))
+    return bool(packet_header_re.match(packet))
 
 
 def decode_packet(packet: str) -> dict:
@@ -191,7 +216,6 @@ def decode_packet(packet: str) -> dict:
     ...     'command': 'on',
     ... }
     True
-
     """
     node_id, _, protocol, attrs = packet.split(DELIM, 3)
 
@@ -258,7 +282,6 @@ def encode_packet(packet: dict) -> str:
     ...     'command': 'on',
     ... })
     '10;newkaku;000001;01;on;'
-
     """
     return SWITCH_COMMAND_TEMPLATE.format(
         node=PacketHeader.master.value,
@@ -326,7 +349,6 @@ def serialize_packet_id(packet: dict) -> str:
     ...     'command': 'on',
     ... })
     'alectov4_000080_0'
-
     """
     # translate protocol in something reversable
     protocol = protocol_translations[packet['protocol']]
@@ -408,7 +430,6 @@ def packet_events(packet: dict) -> Generator:
     ...     'command': 'on',
     ... }))
     >>> assert {'id': 'newkaku_000001_01', 'command': 'on'} in y
-
     """
     field_abbrev = {v: k for k, v in PACKET_FIELDS.items()}
 

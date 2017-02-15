@@ -1,5 +1,7 @@
 """Test parsing of RFlink packets."""
 
+import os
+
 import pytest
 
 from rflink.parser import (
@@ -8,8 +10,13 @@ from rflink.parser import (
     VALUE_TRANSLATION,
     decode_packet,
     deserialize_packet_id,
-    serialize_packet_id
+    serialize_packet_id,
+    valid_packet
 )
+
+PROTOCOL_SAMPLES = os.path.join(
+    os.path.dirname(__file__),
+    'protocol_samples.txt')
 
 
 @pytest.mark.parametrize('packet,expect', [
@@ -64,7 +71,7 @@ from rflink.parser import (
         'revision': '45',
         'hardware': 'Nodo RadioFrequencyLink',
         'firmware': 'RFLink Gateway',
-    }]
+    }],
 ])
 def test_packet_parsing(packet, expect):
     """Packet should be broken up into their primitives."""
@@ -94,3 +101,13 @@ def test_units():
     """Every description should have a unit available."""
     for key in PACKET_FIELDS:
         assert key in UNITS
+
+
+@pytest.mark.parametrize('packet', [l.strip() for l in open(
+    PROTOCOL_SAMPLES).readlines() if l.strip() and l[0] != '#'])
+def test_packet_valiation(packet):
+    """Verify if packet validation correctly identifies official samples.
+
+    http://www.nemcon.nl/blog2/protref
+    """
+    assert valid_packet(packet)
