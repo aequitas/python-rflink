@@ -23,6 +23,16 @@ Library and CLI tools for interacting with RFlink 433MHz transceiver.
 
 http://www.nemcon.nl/blog2/
 
+Requirements
+------------
+
+- Python 3.4 (or higher)
+
+Description
+-----------
+
+This package is created as a library for the Home assistant Rflink component implementation. A CLI has been created mainly for debugging purposes but may be extended in the future for more real-world application if needed.
+
 Installation
 ------------
 
