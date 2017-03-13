@@ -1,5 +1,6 @@
 """Library and CLI tools for interacting with RFlink 433MHz transceiver."""
 
+import sys
 from codecs import open
 from os import path
 from subprocess import check_output
@@ -7,6 +8,9 @@ from subprocess import check_output
 from setuptools import find_packages, setup
 
 here = path.abspath(path.dirname(__file__))
+
+if sys.version_info < (3, 4):
+    raise RuntimeError("This package requires at least Python 3.4")
 
 # Get the long description from the README file
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
