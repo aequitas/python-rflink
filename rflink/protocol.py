@@ -88,7 +88,8 @@ class PacketHandling(ProtocolBase):
         received.
         """
         super().__init__(*args, **kwargs)
-        self.packet_callback = packet_callback
+        if packet_callback:
+            self.packet_callback = packet_callback
 
     def handle_raw_packet(self, raw_packet):
         """Parse raw packet string into packet dict."""
