@@ -88,7 +88,8 @@ class PacketHandling(ProtocolBase):
         received.
         """
         super().__init__(*args, **kwargs)
-        self.packet_callback = packet_callback
+        if packet_callback:
+            self.packet_callback = packet_callback
 
     def handle_raw_packet(self, raw_packet):
         """Parse raw packet string into packet dict."""
@@ -139,7 +140,8 @@ class CommandSerialization(ProtocolBase):
                  **kwargs) -> None:
         """Add packethandling specific initialization."""
         super().__init__(*args, **kwargs)
-        self.packet_callback = packet_callback
+        if packet_callback:
+            self.packet_callback = packet_callback
         self._command_ack = asyncio.Event(loop=self.loop)
         self._ready_to_send = asyncio.Lock(loop=self.loop)
 
