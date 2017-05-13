@@ -72,6 +72,10 @@ PROTOCOL_SAMPLES = os.path.join(
         'hardware': 'Nodo RadioFrequencyLink',
         'firmware': 'RFLink Gateway',
     }],
+    ['20;05;RTS;ID=147907;SWITCH=01;CMD=UP;', {
+        'id': '147907', 'switch': '01', 'protocol': 'rts',
+        'command': 'up',
+    }]
 ])
 def test_packet_parsing(packet, expect):
     """Packet should be broken up into their primitives."""
