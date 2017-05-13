@@ -43,7 +43,7 @@ PROTOCOLS = {
     'repeat': RepeaterProtocol,
 }
 
-ALL_COMMANDS = ['on', 'off', 'allon', 'alloff']
+ALL_COMMANDS = ['on', 'off', 'allon', 'alloff', 'up', 'down', 'stop']
 
 
 def main(argv=sys.argv[1:], loop=None):
