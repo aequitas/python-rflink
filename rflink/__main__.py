@@ -2,7 +2,7 @@
 
 Usage:
   rflink [-v | -vv] [options]
-  rflink [-v | -vv] [options] [--repeat <repeat>] (on | off | allon | alloff) <id>
+  rflink [-v | -vv] [options] [--repeat <repeat>] (on | off | allon | alloff | up | down | stop) <id>
   rflink (-h | --help)
   rflink --version
 
@@ -43,7 +43,7 @@ PROTOCOLS = {
     'repeat': RepeaterProtocol,
 }
 
-ALL_COMMANDS = ['on', 'off', 'allon', 'alloff']
+ALL_COMMANDS = ['on', 'off', 'allon', 'alloff', 'up', 'down', 'stop']
 
 
 def main(argv=sys.argv[1:], loop=None):
