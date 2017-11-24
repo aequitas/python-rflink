@@ -7,11 +7,27 @@ from typing import Any, Callable, Dict, Generator, cast
 
 UNKNOWN = 'unknown'
 
-# This template is only compatible with packet structure PACKET_COMMAND (10;NewKaku;0cac142;3;ON;). Since this template is used for encoding the string to the RFLink, this breaks sending Milight commands.
-# Instead, this template should support items such as 20;01;MiLightv1;ID=F746;SWITCH=00;RGBW=3c00;CMD=ON; (meaning RGBW value BEFORE command).
-SWITCH_COMMAND_TEMPLATE = '{node};{protocol};{id};{switch};{command};'
+"""
+This template is only compatible with packet structure PACKET_COMMAND (10;NewKaku;0cac142;3;ON;). Since this template is used for encoding the string to the RFLink, this breaks sending Milight commands.
+Instead, this template should support items such as 20;01;MiLightv1;ID=F746;SWITCH=00;RGBW=3c00;CMD=ON; (meaning RGBW value BEFORE command).
+
+# 10;NewKaku;0cac142;3;ON;
+PACKET_COMMAND = DELIM.join(['10', PROTOCOL, ADDRESS, BUTTON, COMMAND])
+# 10;MiLightv1;F746;00;3c00;ON;
+PACKET_COMMAND2 = DELIM.join(['10', PROTOCOL, ADDRESS, BUTTON, VALUE, COMMAND])
+# 10;MERTIK;64;UP;
+PACKET_COMMAND3 = DELIM.join(['10', PROTOCOL, ADDRESS, COMMAND])
+# 10;DELTRONIC;001c33;
+PACKET_COMMAND4 = DELIM.join(['10', PROTOCOL, ADDRESS])
+
+We will create 4 switch command templates, in line with the 4 packet command switches.
 
 
+"""
+SWITCH_COMMAND_TEMPLATE_SWITCH_COMMAND = '{node};{protocol};{id};{switch};{command};'
+SWITCH_COMMAND_TEMPLATE_SWITCH_VALUE_COMMAND = '{node};{protocol};{id};{switch};{value};{command};'
+SWITCH_COMMAND_TEMPLATE_COMMAND = '{node};{protocol};{id};{command};'
+SWITCH_COMMAND_TEMPLATE_MINIMAL = '{node};{protocol};{id};'
 
 PACKET_ID_SEP = '_'
 
@@ -23,8 +39,9 @@ ADDRESS = '[0-9a-zA-Z]+'
 BUTTON = '[0-9a-zA-Z]+'
 VALUE = '[0-9a-zA-Z]+'
 # TODO: Command can be ON,OFF,ALLON,ALLOFF,DISCO+, DISCO-, MODE0 - MODE8
-COMMAND = '[0-9a-zA-Z]+'
-# TODO: Control Command can be ON,OFF,ALLON,ALLOFF,DISCO+, DISCO-, MODE0 - MODE8
+# Use a more precise regex (?:[\s]|^)(ON|OFF|ALLON|ALLOFF|DISCO\+|DISCO-|MODE[0-8]|UP|DOWN|PAIR|UNPAIR|BRIGHT|COLOR)(?=[\s]|$)
+# https://regex101.com/r/uA2xR5/1 does wonder
+COMMAND = '(ON|OFF|ALLON|ALLOFF|DISCO\+|DISCO-|MODE[0-8]|UP|DOWN)'
 CONTROL_COMMAND = '[A-Z]+(=[A-Z0-9]+)?'
 DATA = '[a-zA-Z0-9;=_]+'
 RESPONSES = 'OK'
@@ -52,6 +69,7 @@ PACKET_VERSION = DELIM.join(['20', SEQUENCE, VERSION])
 # 11;20;0B;NewKaku;ID=000005;SWITCH=2;CMD=ON;
 PACKET_DEVICE_CREATE = '11;' + PACKET_DEVICE
 
+# So the library matches against all of the above structures - good!
 PACKET_HEADER_RE = '^(' + '|'.join(
     [PACKET_VERSION, PACKET_DEVICE_CREATE, PACKET_RESPONSE, PACKET_DEVICE,
      PACKET_COMMAND, PACKET_COMMAND2, PACKET_COMMAND3, PACKET_COMMAND4, PACKET_CONTROL]) + ');$'
@@ -293,6 +311,36 @@ def encode_packet(packet: dict) -> str:
     ... })
     '10;newkaku;000001;01;on;'
     """
+    
+    """
+    TODO This template is not guaranteed to be the right one. For example, it ignores the RGBW value for Milight.
+
+    # 10;NewKaku;0cac142;3;ON;
+    PACKET_COMMAND = DELIM.join(['10', PROTOCOL, ADDRESS, BUTTON, COMMAND])
+    # 10;MiLightv1;F746;00;3c00;ON;
+    PACKET_COMMAND2 = DELIM.join(['10', PROTOCOL, ADDRESS, BUTTON, VALUE, COMMAND])
+    # 10;MERTIK;64;UP;
+    PACKET_COMMAND3 = DELIM.join(['10', PROTOCOL, ADDRESS, COMMAND])
+    # 10;DELTRONIC;001c33;
+    PACKET_COMMAND4 = DELIM.join(['10', PROTOCOL, ADDRESS])
+
+
+    Will use this one:
+    SWITCH_COMMAND_TEMPLATE_SWITCH_COMMAND = '{node};{protocol};{id};{switch};{command};'
+    SWITCH_COMMAND_TEMPLATE_SWITCH_VALUE_COMMAND = '{node};{protocol};{id};{switch};{value};{command};'
+    SWITCH_COMMAND_TEMPLATE_COMMAND = '{node};{protocol};{id};{command};'
+    SWITCH_COMMAND_TEMPLATE_MINIMAL = '{node};{protocol};{id};'
+    
+    """
+    if 'value' in packet:
+        SWITCH_COMMAND_TEMPLATE = SWITCH_COMMAND_TEMPLATE_SWITCH_VALUE_COMMAND
+    elif 'switch' in packet:
+        SWITCH_COMMAND_TEMPLATE = SWITCH_COMMAND_TEMPLATE_SWITCH_COMMAND     
+    elif 'command' in packet:
+        SWITCH_COMMAND_TEMPLATE =  SWITCH_COMMAND_TEMPLATE_COMMAND    
+    else:
+        SWITCH_COMMAND_TEMPLATE = SWITCH_COMMAND_TEMPLATE_MINIMAL     
+
     return SWITCH_COMMAND_TEMPLATE.format(
         node=PacketHeader.master.value,
         **packet
