@@ -1,0 +1,22 @@
+NOTES OF INVESTIGATION
+
+RF_COM (RF component)
+RF_PYT (RF python library)
+
+* Adjusted RF_PYT protocol.py command encode_packet
+* This is called by RF_PYT protocol.py command send_packet:
+  Calls encode_packet with "fields"
+  Sends it via send_raw_packet (sends it via TCP or serial and adds newline)
+* Called by RF_PYT protocol send_packet (takes fields) of PacketHandling class
+* Called by RF_PYT protocol send_command which does a deserialize on device_id
+* Called by RF_PYC async_send_command(call)
+* Called by RF_PYC _async_send_command(self, cmd, repetitions)
+   _LOGGER.debug(
+            "Sending command: %s to Rflink device: %s", cmd, self._device_id)
+
+
+
+
+put it in .homeassistant/deps
+git clone https://github.com/djm300/python-rflink
+hass --skip-pip
