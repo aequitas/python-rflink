@@ -6,7 +6,13 @@ from enum import Enum
 from typing import Any, Callable, Dict, Generator, cast
 
 UNKNOWN = 'unknown'
+
+# This template is only compatible with packet structure PACKET_COMMAND (10;NewKaku;0cac142;3;ON;). Since this template is used for encoding the string to the RFLink, this breaks sending Milight commands.
+# Instead, this template should support items such as 20;01;MiLightv1;ID=F746;SWITCH=00;RGBW=3c00;CMD=ON; (meaning RGBW value BEFORE command).
 SWITCH_COMMAND_TEMPLATE = '{node};{protocol};{id};{switch};{command};'
+
+
+
 PACKET_ID_SEP = '_'
 
 # contruct regex to validate packets before parsing
@@ -16,7 +22,9 @@ PROTOCOL = '[^;]{3,}'
 ADDRESS = '[0-9a-zA-Z]+'
 BUTTON = '[0-9a-zA-Z]+'
 VALUE = '[0-9a-zA-Z]+'
+# TODO: Command can be ON,OFF,ALLON,ALLOFF,DISCO+, DISCO-, MODE0 - MODE8
 COMMAND = '[0-9a-zA-Z]+'
+# TODO: Control Command can be ON,OFF,ALLON,ALLOFF,DISCO+, DISCO-, MODE0 - MODE8
 CONTROL_COMMAND = '[A-Z]+(=[A-Z0-9]+)?'
 DATA = '[a-zA-Z0-9;=_]+'
 RESPONSES = 'OK'
@@ -81,6 +89,7 @@ PACKET_FIELDS = {
     'rainrate': 'rain_rate',
     'raintot': 'total_rain',
     'rev': 'revision',
+    'set_level': 'dim_level',
     'sound': 'noise_level',
     'temp': 'temperature',
     'uv': 'uv_intensity',
@@ -120,6 +129,7 @@ UNITS = {
     'rainrate': 'mm',
     'raintot': 'mm',
     'rev': None,
+    'set_level': None,
     # unknown, might be dB?
     'sound': None,
     # might be °F, but default to something
