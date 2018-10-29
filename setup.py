@@ -64,7 +64,9 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
 
     install_requires=[
+        'async_timeout',
         'docopt',
+        'pyserial',
         'pyserial-asyncio',
         'typing',
     ],
@@ -97,6 +99,7 @@ setup(
     entry_points={
         'console_scripts': [
             'rflink=rflink.__main__:main',
+            'rflinkproxy=rflinkproxy.__main__:main',
         ],
     },
 )
