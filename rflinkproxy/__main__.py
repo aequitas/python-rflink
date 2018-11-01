@@ -1,4 +1,4 @@
-"""RFLink proxy.
+"""Command line interface for rflink proxy.
 
 Usage:
   rflinkproxy [-v | -vv] [options]
@@ -286,7 +286,7 @@ def main(argv=sys.argv[1:], loop=None):
 
     server = loop.run_until_complete(server_coro)
     addr = server.sockets[0].getsockname()
-    log.info(f'Serving on {addr}')
+    log.info('Serving on %s', addr)
 
     conn_coro = proxy.connect()
     loop.run_until_complete(conn_coro)
@@ -305,11 +305,11 @@ def main(argv=sys.argv[1:], loop=None):
         writers = [i[1] for i in list(clients)]
         for writer in writers:
             writer.close()
-            # loop.run_until_complete(writer.wait_closed()) # Python 3.7
+            if sys.version_info >= (3, 7):
+                loop.run_until_complete(writer.wait_closed())
 
         # cleanup RFLink connection
         proxy.transport.close()
-        loop.run_forever()  # Never finishes..
 
     finally:
         loop.close()
