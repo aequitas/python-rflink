@@ -20,7 +20,7 @@ COMMAND = '[0-9a-zA-Z]+'
 CONTROL_COMMAND = '[A-Z]+(=[A-Z0-9]+)?'
 DATA = '[a-zA-Z0-9;=_]+'
 RESPONSES = 'OK'
-VERSION = '[0-9a-zA-Z\ \.-]+'
+VERSION = r'[0-9a-zA-Z\ \.-]+'
 
 # 10;NewKaku;0cac142;3;ON;
 PACKET_COMMAND = DELIM.join(['10', PROTOCOL, ADDRESS, BUTTON, COMMAND])

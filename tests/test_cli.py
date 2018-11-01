@@ -16,7 +16,11 @@ def test_spawns(monkeypatch):
         yield from asyncio.sleep(0.1)
         loop.stop()
     loop = asyncio.get_event_loop()
-    asyncio.async(stop(), loop=loop)
+    if hasattr(asyncio, 'ensure_future'):
+        ensure_future = asyncio.ensure_future
+    else:  # Deprecated since Python 3.4.4
+        ensure_future = getattr(asyncio, "async")
+    ensure_future(stop(), loop=loop)
 
     # use simulation interface
     args = ['--port', 'loop://', '-v']
