@@ -141,7 +141,10 @@ class RFLinkProxy:
 
         log.debug(' %s:%s: decoded packet: %s', peer[0], peer[1], packet)
         if self.protocol and packet:
-            log.info(' %s:%s: forwarding packet %s to RFLink', peer[0], peer[1], raw_packet)
+            if not ';PING;' in raw_packet:
+                log.info(' %s:%s: forwarding packet %s to RFLink', peer[0], peer[1], raw_packet)
+            else:
+                log.debug(' %s:%s: forwarding packet %s to RFLink', peer[0], peer[1], raw_packet)
             yield from self.forward_packet(writer, packet, raw_packet)
         else:
             log.warning(' %s:%s: no valid packet %s', peer[0], peer[1], packet)
@@ -200,7 +203,10 @@ class RFLinkProxy:
 
     def raw_callback(self, raw_packet):
         """Send data to all connected clients."""
-        log.info('forwarding packet %s to clients', raw_packet)
+        if not ';PONG;' in raw_packet:
+            log.info('forwarding packet %s to clients', raw_packet)
+        else:
+            log.debug('forwarding packet %s to clients', raw_packet)
         writers = [i[1] for i in list(clients)]
         for writer in writers:
             writer.write(str(raw_packet).encode() + CRLF)
