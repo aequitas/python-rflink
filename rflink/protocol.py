@@ -1,4 +1,8 @@
 """Asyncio protocol implementation of RFlink."""
+
+# ./.homeassistant/deps/lib/python/site-packages/rflink/protocol.py
+# /Library/Frameworks/Python.framework/Versions/3.6//lib/python3.6/site-packages/rflink/protocol.py
+
 import asyncio
 import concurrent
 import logging
@@ -17,6 +21,7 @@ from .parser import (
 )
 
 log = logging.getLogger(__name__)
+rflink_log = None
 
 TIMEOUT = timedelta(seconds=5)
 
@@ -67,6 +72,15 @@ class ProtocolBase(asyncio.Protocol):
         log.debug('writing data: %s', repr(data))
         self.transport.write(data.encode())
 
+    def log_all(self, file):
+        """Log all data received from RFLink to file."""
+        global rflink_log
+        if file == None:
+            rflink_log = None
+        else:
+            log.debug('logging to: %s', file)
+            rflink_log = open(file, 'a')
+
     def connection_lost(self, exc):
         """Log when connection is closed, if needed call callback."""
         if exc:
@@ -94,6 +108,9 @@ class PacketHandling(ProtocolBase):
     def handle_raw_packet(self, raw_packet):
         """Parse raw packet string into packet dict."""
         log.debug('got packet: %s', raw_packet)
+        if rflink_log:
+            print(raw_packet, file=rflink_log)
+            rflink_log.flush()
         packet = None
         try:
             packet = decode_packet(raw_packet)
@@ -131,7 +148,6 @@ class PacketHandling(ProtocolBase):
         command['command'] = action
         log.debug('sending command: %s', command)
         self.send_packet(command)
-
 
 class CommandSerialization(ProtocolBase):
     """Logic for ensuring asynchronous commands are send in order."""
