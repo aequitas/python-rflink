@@ -1,9 +1,14 @@
 """Parsers."""
 
+# ./.homeassistant/deps/lib/python/site-packages/rflink/parser.py
+# /Library/Frameworks/Python.framework/Versions/3.6//lib/python3.6/site-packages/rflink/parser.py
+
 import re
 from collections import defaultdict
 from enum import Enum
 from typing import Any, Callable, Dict, Generator, cast
+import datetime
+import time
 
 UNKNOWN = 'unknown'
 SWITCH_COMMAND_TEMPLATE = '{node};{protocol};{id};{switch};{command};'
@@ -19,8 +24,10 @@ VALUE = '[0-9a-zA-Z]+'
 COMMAND = '[0-9a-zA-Z]+'
 CONTROL_COMMAND = '[A-Z]+(=[A-Z0-9]+)?'
 DATA = '[a-zA-Z0-9;=_]+'
+DEBUG_DATA = '[a-zA-Z0-9,;=_\(\)]+'
 RESPONSES = 'OK'
-VERSION = r'[0-9a-zA-Z\ \.-]+'
+VERSION = '[0-9a-zA-Z\ \.-]+'
+DEBUG = 'DEBUG'
 
 # 10;NewKaku;0cac142;3;ON;
 PACKET_COMMAND = DELIM.join(['10', PROTOCOL, ADDRESS, BUTTON, COMMAND])
@@ -41,12 +48,22 @@ PACKET_DEVICE = DELIM.join(['20', SEQUENCE, PROTOCOL, DATA])
 # 20;00;Nodo RadioFrequencyLink - RFLink Gateway V1.1 - R46;
 PACKET_VERSION = DELIM.join(['20', SEQUENCE, VERSION])
 
+# 20;75;DEBUG;Pulses=90;Pulses(uSec)=1200,2760,120...
+PACKET_DEBUG = DELIM.join(['20', SEQUENCE, DEBUG, DEBUG_DATA])
+
+# 20;01;RFUDEBUG=OFF;
+PACKET_RFDEBUGN = DELIM.join(['20', SEQUENCE, 'RFDEBUG=ON'])
+PACKET_RFDEBUGF = DELIM.join(['20', SEQUENCE, 'RFDEBUG=OFF'])
+PACKET_RFUDEBUGN = DELIM.join(['20', SEQUENCE, 'RFUDEBUG=ON'])
+PACKET_RFUDEBUGF = DELIM.join(['20', SEQUENCE, 'RFUDEBUG=OFF'])
+
 # 11;20;0B;NewKaku;ID=000005;SWITCH=2;CMD=ON;
 PACKET_DEVICE_CREATE = '11;' + PACKET_DEVICE
 
 PACKET_HEADER_RE = '^(' + '|'.join(
     [PACKET_VERSION, PACKET_DEVICE_CREATE, PACKET_RESPONSE, PACKET_DEVICE,
-     PACKET_COMMAND, PACKET_COMMAND2, PACKET_COMMAND3, PACKET_COMMAND4, PACKET_CONTROL]) + ');$'
+     PACKET_COMMAND, PACKET_COMMAND2, PACKET_COMMAND3, PACKET_COMMAND4, PACKET_CONTROL,
+     PACKET_DEBUG, PACKET_RFDEBUGN, PACKET_RFUDEBUGN, PACKET_RFDEBUGF, PACKET_RFUDEBUGF ]) + ');$'
 packet_header_re = re.compile(PACKET_HEADER_RE)
 
 
@@ -235,6 +252,11 @@ def decode_packet(packet: str) -> dict:
     elif protocol == 'PONG':
         data['ping'] = protocol.lower()
 
+    # debug response
+    elif protocol == 'DEBUG':
+        data['protocol'] = protocol.lower()
+        data['tm'] = packet[3:5]
+
     # failure response
     elif protocol == 'CMD UNKNOWN':
         data['response'] = 'command_unknown'
@@ -283,10 +305,15 @@ def encode_packet(packet: dict) -> str:
     ... })
     '10;newkaku;000001;01;on;'
     """
-    return SWITCH_COMMAND_TEMPLATE.format(
-        node=PacketHeader.master.value,
-        **packet
-    )
+    if packet['protocol'] == 'rfdebug':
+        return '10;RFDEBUG=' + packet['command'] + ';'
+    elif packet['protocol'] == 'rfudebug':
+        return '10;RFDEBUG=' + packet['command'] + ';'
+    else:
+        return SWITCH_COMMAND_TEMPLATE.format(
+            node=PacketHeader.master.value,
+            **packet
+        )
 
 
 # create lookup table of not easy to reverse protocol names
@@ -439,12 +466,28 @@ def packet_events(packet: dict) -> Generator:
         # switch events only have one event in each packet
         yield dict(id=packet_id, **events)
     else:
-        # sensors can have multiple
-        for sensor, value in events.items():
-            unit = packet.get(sensor + '_unit', None)
+        if packet_id == 'debug':
             yield {
-                'id': packet_id + PACKET_ID_SEP + field_abbrev[sensor],
-                'sensor': sensor,
-                'value': value,
-                'unit': unit,
+                'id': 'raw',
+                'value': packet.get('pulses(usec)'),
+                'tm': packet.get('tm'),
+                'pulses': packet.get('pulses'),
             }
+        else:
+            # sensors can have multiple
+            for sensor, value in events.items():
+                unit = packet.get(sensor + '_unit', None)
+                yield {
+                    'id': packet_id + PACKET_ID_SEP + field_abbrev[sensor],
+                    'sensor': sensor,
+                    'value': value,
+                    'unit': unit,
+                }
+
+            if packet_id != 'rflink':
+                yield {
+                   'id': packet_id + PACKET_ID_SEP + 'update_time',
+                   'sensor': 'update_time',
+                   'value': round(time.time()),
+                   'unit': 's',
+                }
