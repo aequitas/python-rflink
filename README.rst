@@ -10,10 +10,10 @@ Python RFlink library
 .. image:: https://img.shields.io/pypi/pyversions/rflink.svg
     :target: https://pypi.python.org/pypi/rflink
 
-.. image:: https://img.shields.io/codeclimate/github/aequitas/python-rflink.svg
+.. image:: https://img.shields.io/codeclimate/maintainability/aequitas/python-rflink.svg
     :target: https://codeclimate.com/github/aequitas/python-rflink/code
 
-.. image:: https://img.shields.io/codeclimate/coverage/github/aequitas/python-rflink.svg
+.. image:: https://img.shields.io/codeclimate/coverage/aequitas/python-rflink.svg
     :target: https://codeclimate.com/github/aequitas/python-rflink/coverage
 
 .. image:: https://img.shields.io/requires/github/aequitas/python-rflink.svg
