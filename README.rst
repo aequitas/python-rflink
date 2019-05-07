@@ -10,14 +10,19 @@ Python RFlink library
 .. image:: https://img.shields.io/pypi/pyversions/rflink.svg
     :target: https://pypi.python.org/pypi/rflink
 
-.. image:: https://img.shields.io/codeclimate/github/aequitas/python-rflink.svg
-    :target: https://codeclimate.com/github/aequitas/python-rflink/code
+.. image:: https://api.codeclimate.com/v1/badges/a99a88d28ad37a79dbf6/maintainability
+    :target: https://codeclimate.com/github/codeclimate/codeclimate/maintainability
+    :alt: Maintainability
 
-.. image:: https://img.shields.io/codeclimate/coverage/github/aequitas/python-rflink.svg
-    :target: https://codeclimate.com/github/aequitas/python-rflink/coverage
+.. image:: https://api.codeclimate.com/v1/badges/a99a88d28ad37a79dbf6/test_coverage
+   :target: https://codeclimate.com/github/codeclimate/codeclimate/test_coverage
+   :alt: Test Coverage
 
 .. image:: https://img.shields.io/requires/github/aequitas/python-rflink.svg
     :target: https://requires.io/github/aequitas/python-rflink/requirements/
+
+.. image:: https://img.shields.io/badge/Cyberveiligheid-97%25-yellow.svg
+    :target: https://eurocyber.nl
 
 Library and CLI tools for interacting with RFlink 433MHz transceiver.
 

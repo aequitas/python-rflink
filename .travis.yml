@@ -1,7 +1,9 @@
+dist: xenial   # required for Python >= 3.7
 language: python
 python:
 - 3.4
-- 3.5
+- 3.6
+- 3.7
 - 2.7
 - pypy3
 install: pip install tox-travis python-coveralls codeclimate-test-reporter
@@ -18,6 +20,7 @@ deploy:
   distributions: "sdist bdist_wheel"
   on:
     tags: true
+    python: 3.7  # prevent deploying multiple times (an therefore causing deploys to fail)
     repo: aequitas/python-rflink
 after_success:
   - coveralls
