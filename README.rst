@@ -55,7 +55,7 @@ Installation
 Usage of RFLink debug CLI
 -------------------------
 
-.. code-block:: none
+.. code-block::
 
     $ rflink -h
     Command line interface for rflink library.
@@ -80,7 +80,7 @@ Usage of RFLink debug CLI
 
 Intercept and display Rflink packets:
 
-.. code-block:: none
+.. code-block::
 
     $ rflink
     rflink                           Nodo RadioFrequencyLink RFLink Gateway V1.1 R45
@@ -92,20 +92,20 @@ Intercept and display Rflink packets:
 
 Turn a device on or off:
 
-.. code-block:: none
+.. code-block::
 
     $ rflink on newkaku_0000_1
     $ rflink off newkaku_0000_1
 
 Use of TCP mode instead of serial port (eg: ESP8266 serial bridge):
 
-.. code-block:: none
+.. code-block::
 
     $ rflink --host 1.2.3.4 --port 1234
 
 Debug logging is shown in verbose mode for debugging:
 
-.. code-block:: none
+.. code-block::
 
     $ rflink -vv
     DEBUG:asyncio:Using selector: EpollSelector
@@ -128,7 +128,8 @@ Debug logging is shown in verbose mode for debugging:
 Usage of RFLinkProxy CLI
 ------------------------
 
-.. code-block:: none
+.. code-block::
+
     $ rflinkproxy -h
     Command line interface for rflink proxy.
 
@@ -151,20 +152,20 @@ Usage of RFLinkProxy CLI
 Share RFLink connected to serial port /dev/ttyACM1,
 the proxy will listen on port 2345:
 
-.. code-block:: none
+.. code-block::
 
     $ rflink --port /dev/ttyACM0 --listenport 2345
 
 Share TCP mode RFLink instead of serial port (eg: ESP8266 serial bridge),
 the proxy will listen on port 2345:
 
-.. code-block:: none
+.. code-block::
 
     $ rflink --host 1.2.3.4 --port 1234 --listenport 2345
 
 Debug logging is shown in verbose mode for debugging:
 
-.. code-block:: none
+.. code-block::
 
     $ rflink -vv --host 1.2.3.4 --port 1234 --listenport 2345
     DEBUG:asyncio:Using selector: EpollSelector
