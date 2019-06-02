@@ -48,10 +48,15 @@ class ProtocolBase(asyncio.Protocol):
 
     def data_received(self, data):
         """Add incoming data to buffer."""
-        data = data.decode()
-        log.debug('received data: %s', data.strip())
-        self.buffer += data
-        self.handle_lines()
+        try:
+            data = data.decode()
+        except UnicodeDecodeError:
+            invalid_data = data.decode(errors="replace")
+            log.warning("Error during decode of data, invalid data: %s", invalid_data)
+        else:
+            log.debug('received data: %s', data.strip())
+            self.buffer += data
+            self.handle_lines()
 
     def handle_lines(self):
         """Assemble incoming data into per-line packets."""
