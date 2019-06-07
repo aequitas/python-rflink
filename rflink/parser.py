@@ -308,7 +308,9 @@ def encode_packet(packet: dict) -> str:
     if packet['protocol'] == 'rfdebug':
         return '10;RFDEBUG=' + packet['command'] + ';'
     elif packet['protocol'] == 'rfudebug':
-        return '10;RFDEBUG=' + packet['command'] + ';'
+        return '10;RFUDEBUG=' + packet['command'] + ';'
+    elif packet['protocol'] == 'qrfdebug':
+        return '10;QRFDEBUG=' + packet['command'] + ';'
     else:
         return SWITCH_COMMAND_TEMPLATE.format(
             node=PacketHeader.master.value,
