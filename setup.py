@@ -70,7 +70,7 @@ setup(
         'docopt',
         'pyserial',
         'pyserial-asyncio',
-        'typing',
+        'typing;python_version<"3.5"',
     ],
 
     # # List additional groups of dependencies here (e.g. development
