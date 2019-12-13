@@ -24,9 +24,9 @@ VALUE = '[0-9a-zA-Z]+'
 COMMAND = '[0-9a-zA-Z]+'
 CONTROL_COMMAND = '[A-Z]+(=[A-Z0-9]+)?'
 DATA = '[a-zA-Z0-9;=_]+'
-DEBUG_DATA = '[a-zA-Z0-9,;=_\(\)]+'
+DEBUG_DATA = '[a-zA-Z0-9,;=_()]+'
 RESPONSES = 'OK'
-VERSION = '[0-9a-zA-Z\ \.-]+'
+VERSION = '[0-9a-zA-Z .-]+'
 DEBUG = 'DEBUG'
 
 # 10;NewKaku;0cac142;3;ON;
