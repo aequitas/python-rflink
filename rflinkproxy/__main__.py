@@ -141,7 +141,7 @@ class RFLinkProxy:
 
         log.debug(' %s:%s: decoded packet: %s', peer[0], peer[1], packet)
         if self.protocol and packet:
-            if not ';PING;' in raw_packet:
+            if ';PING;' not in raw_packet:
                 log.info(' %s:%s: forwarding packet %s to RFLink', peer[0], peer[1], raw_packet)
             else:
                 log.debug(' %s:%s: forwarding packet %s to RFLink', peer[0], peer[1], raw_packet)
@@ -203,7 +203,7 @@ class RFLinkProxy:
 
     def raw_callback(self, raw_packet):
         """Send data to all connected clients."""
-        if not ';PONG;' in raw_packet:
+        if ';PONG;' not in raw_packet:
             log.info('forwarding packet %s to clients', raw_packet)
         else:
             log.debug('forwarding packet %s to clients', raw_packet)

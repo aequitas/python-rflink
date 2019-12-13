@@ -80,7 +80,7 @@ class ProtocolBase(asyncio.Protocol):
     def log_all(self, file):
         """Log all data received from RFLink to file."""
         global rflink_log
-        if file == None:
+        if file is None:
             rflink_log = None
         else:
             log.debug('logging to: %s', file)
@@ -153,6 +153,7 @@ class PacketHandling(ProtocolBase):
         command['command'] = action
         log.debug('sending command: %s', command)
         self.send_packet(command)
+
 
 class CommandSerialization(ProtocolBase):
     """Logic for ensuring asynchronous commands are send in order."""

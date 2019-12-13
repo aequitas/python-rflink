@@ -4,11 +4,10 @@
 # /Library/Frameworks/Python.framework/Versions/3.6//lib/python3.6/site-packages/rflink/parser.py
 
 import re
+import time
 from collections import defaultdict
 from enum import Enum
 from typing import Any, Callable, Dict, Generator, cast
-import datetime
-import time
 
 UNKNOWN = 'unknown'
 SWITCH_COMMAND_TEMPLATE = '{node};{protocol};{id};{switch};{command};'
@@ -463,7 +462,9 @@ def packet_events(packet: dict) -> Generator:
     ... }))
     >>> assert {'id': 'newkaku_000001_01', 'command': 'on'} in y
     """
-    field_abbrev = {v: k for k, v in sorted(PACKET_FIELDS.items(), key=lambda x: (x[1], x[0]), reverse=True)}
+    field_abbrev = {
+        v: k for k, v in sorted(PACKET_FIELDS.items(), key=lambda x: (x[1], x[0]), reverse=True)
+    }
 
     packet_id = serialize_packet_id(packet)
     events = {f: v for f, v in packet.items() if f in field_abbrev}
