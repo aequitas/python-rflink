@@ -356,7 +356,7 @@ protocol_translations = TranslationsDict(None)
 
 
 def serialize_packet_id(packet: dict) -> str:
-    """Serialize packet identifiers into one reversable string.
+    """Serialize packet identifiers into one reversible string.
 
     >>> serialize_packet_id({
     ...     'protocol': 'newkaku',
@@ -382,7 +382,7 @@ def serialize_packet_id(packet: dict) -> str:
     ... })
     'alectov4_000080_0'
     """
-    # translate protocol in something reversable
+    # translate protocol into something reversible
     protocol = protocol_translations[packet['protocol']]
 
     if protocol == UNKNOWN:
@@ -419,7 +419,7 @@ def deserialize_packet_id(packet_id: str) -> dict:
 
     packet_identifiers = {
         # lookup the reverse translation of the protocol in the translation
-        # table, fallback to protocol. If this is a unserializable protocol
+        # table, fallback to protocol. If this is an unserializable protocol
         # name, it has not been serialized before and is not in the
         # translate_protocols table this will result in an invalid command.
         'protocol': protocol_translations.get(protocol, protocol),

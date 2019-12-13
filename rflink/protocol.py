@@ -197,7 +197,7 @@ class EventHandling(PacketHandling):
     """Breaks up packets into individual events with ids'.
 
     Most packets represent a single event (light on, measured
-    temparature), but some contain multiple events (temperature and
+    temperature), but some contain multiple events (temperature and
     humidity). This class adds logic to convert packets into individual
     events each with their own id based on packet details (protocol,
     switch, etc).
