@@ -17,7 +17,7 @@ from .parser import (
     deserialize_packet_id,
     encode_packet,
     packet_events,
-    valid_packet
+    valid_packet,
 )
 
 log = logging.getLogger(__name__)
@@ -37,14 +37,14 @@ class ProtocolBase(asyncio.Protocol):
             self.loop = loop
         else:
             self.loop = asyncio.get_event_loop()
-        self.packet = ''
-        self.buffer = ''
+        self.packet = ""
+        self.buffer = ""
         self.disconnect_callback = disconnect_callback
 
     def connection_made(self, transport):
         """Just logging for now."""
         self.transport = transport
-        log.debug('connected')
+        log.debug("connected")
 
     def data_received(self, data):
         """Add incoming data to buffer."""
@@ -54,7 +54,7 @@ class ProtocolBase(asyncio.Protocol):
             invalid_data = data.decode(errors="replace")
             log.warning("Error during decode of data, invalid data: %s", invalid_data)
         else:
-            log.debug('received data: %s', data.strip())
+            log.debug("received data: %s", data.strip())
             self.buffer += data
             self.handle_lines()
 
@@ -65,7 +65,7 @@ class ProtocolBase(asyncio.Protocol):
             if valid_packet(line):
                 self.handle_raw_packet(line)
             else:
-                log.warning('dropping invalid data: %s', line)
+                log.warning("dropping invalid data: %s", line)
 
     def handle_raw_packet(self, raw_packet: bytes) -> None:
         """Handle one raw incoming packet."""
@@ -73,25 +73,25 @@ class ProtocolBase(asyncio.Protocol):
 
     def send_raw_packet(self, packet: str):
         """Encode and put packet string onto write buffer."""
-        data = packet + '\r\n'
-        log.debug('writing data: %s', repr(data))
+        data = packet + "\r\n"
+        log.debug("writing data: %s", repr(data))
         self.transport.write(data.encode())
 
     def log_all(self, file):
         """Log all data received from RFLink to file."""
         global rflink_log
-        if file == None:
+        if file is None:
             rflink_log = None
         else:
-            log.debug('logging to: %s', file)
-            rflink_log = open(file, 'a')
+            log.debug("logging to: %s", file)
+            rflink_log = open(file, "a")
 
     def connection_lost(self, exc):
         """Log when connection is closed, if needed call callback."""
         if exc:
-            log.exception('disconnected due to exception')
+            log.exception("disconnected due to exception")
         else:
-            log.info('disconnected because of close/abort.')
+            log.info("disconnected because of close/abort.")
         if self.disconnect_callback:
             self.disconnect_callback(exc)
 
@@ -99,8 +99,7 @@ class ProtocolBase(asyncio.Protocol):
 class PacketHandling(ProtocolBase):
     """Handle translating rflink packets to/from python primitives."""
 
-    def __init__(self, *args, packet_callback: Callable = None,
-                 **kwargs) -> None:
+    def __init__(self, *args, packet_callback: Callable = None, **kwargs) -> None:
         """Add packethandling specific initialization.
 
         packet_callback: called with every complete/valid packet
@@ -112,28 +111,28 @@ class PacketHandling(ProtocolBase):
 
     def handle_raw_packet(self, raw_packet):
         """Parse raw packet string into packet dict."""
-        log.debug('got packet: %s', raw_packet)
+        log.debug("got packet: %s", raw_packet)
         if rflink_log:
             print(raw_packet, file=rflink_log)
             rflink_log.flush()
         packet = None
         try:
             packet = decode_packet(raw_packet)
-        except:
-            log.exception('failed to parse packet: %s', packet)
+        except BaseException:
+            log.exception("failed to parse packet: %s", packet)
 
-        log.debug('decoded packet: %s', packet)
+        log.debug("decoded packet: %s", packet)
 
         if packet:
-            if 'ok' in packet:
+            if "ok" in packet:
                 # handle response packets internally
-                log.debug('command response: %s', packet)
+                log.debug("command response: %s", packet)
                 self._last_ack = packet
                 self._command_ack.set()
             else:
                 self.handle_packet(packet)
         else:
-            log.warning('no valid packet')
+            log.warning("no valid packet")
 
     def handle_packet(self, packet):
         """Process incoming packet dict and optionally call callback."""
@@ -141,7 +140,7 @@ class PacketHandling(ProtocolBase):
             # forward to callback
             self.packet_callback(packet)
         else:
-            print('packet', packet)
+            print("packet", packet)
 
     def send_packet(self, fields):
         """Concat fields and send packet to gateway."""
@@ -150,15 +149,15 @@ class PacketHandling(ProtocolBase):
     def send_command(self, device_id, action):
         """Send device command to rflink gateway."""
         command = deserialize_packet_id(device_id)
-        command['command'] = action
-        log.debug('sending command: %s', command)
+        command["command"] = action
+        log.debug("sending command: %s", command)
         self.send_packet(command)
+
 
 class CommandSerialization(ProtocolBase):
     """Logic for ensuring asynchronous commands are send in order."""
 
-    def __init__(self, *args, packet_callback: Callable = None,
-                 **kwargs) -> None:
+    def __init__(self, *args, packet_callback: Callable = None, **kwargs) -> None:
         """Add packethandling specific initialization."""
         super().__init__(*args, **kwargs)
         if packet_callback:
@@ -176,16 +175,17 @@ class CommandSerialization(ProtocolBase):
             self._command_ack.clear()
             self.send_command(device_id, action)
 
-            log.debug('waiting for acknowledgement')
+            log.debug("waiting for acknowledgement")
             try:
-                yield from asyncio.wait_for(self._command_ack.wait(),
-                                            TIMEOUT.seconds, loop=self.loop)
-                log.debug('packet acknowledged')
+                yield from asyncio.wait_for(
+                    self._command_ack.wait(), TIMEOUT.seconds, loop=self.loop
+                )
+                log.debug("packet acknowledged")
             except concurrent.futures._base.TimeoutError:
-                acknowledgement = {'ok': False, 'message': 'timeout'}
-                log.warning('acknowledge timeout')
+                acknowledgement = {"ok": False, "message": "timeout"}
+                log.warning("acknowledge timeout")
             else:
-                acknowledgement = self._last_ack.get('ok', False)
+                acknowledgement = self._last_ack.get("ok", False)
         finally:
             # allow next command
             self._ready_to_send.release()
@@ -203,16 +203,17 @@ class EventHandling(PacketHandling):
     switch, etc).
     """
 
-    def __init__(self, *args, event_callback: Callable = None,
-                 ignore: List[str] = None, **kwargs) -> None:
+    def __init__(
+        self, *args, event_callback: Callable = None, ignore: List[str] = None, **kwargs
+    ) -> None:
         """Add eventhandling specific initialization."""
         super().__init__(*args, **kwargs)
         self.event_callback = event_callback
         # suppress printing of packets
-        if not kwargs.get('packet_callback'):
+        if not kwargs.get("packet_callback"):
             self.packet_callback = lambda x: None
         if ignore:
-            log.debug('ignoring: %s', ignore)
+            log.debug("ignoring: %s", ignore)
             self.ignore = ignore
         else:
             self.ignore = []
@@ -226,28 +227,28 @@ class EventHandling(PacketHandling):
         events = packet_events(packet)
 
         for event in events:
-            if self.ignore_event(event['id']):
-                log.debug('ignoring event with id: %s', event)
+            if self.ignore_event(event["id"]):
+                log.debug("ignoring event with id: %s", event)
                 continue
-            log.debug('got event: %s', event)
+            log.debug("got event: %s", event)
             if self.event_callback:
                 self.event_callback(event)
             else:
                 self.handle_event(event)
 
     def handle_event(self, event):
-        """Default handling of incoming event (print)."""
-        string = '{id:<32} '
-        if 'command' in event:
-            string += '{command}'
-        elif 'version' in event:
-            if 'hardware' in event:
-                string += '{hardware} {firmware} '
-            string += 'V{version} R{revision}'
+        """Handle of incoming event (print)."""
+        string = "{id:<32} "
+        if "command" in event:
+            string += "{command}"
+        elif "version" in event:
+            if "hardware" in event:
+                string += "{hardware} {firmware} "
+            string += "V{version} R{revision}"
         else:
-            string += '{value}'
-            if event.get('unit'):
-                string += ' {unit}'
+            string += "{value}"
+            if event.get("unit"):
+                string += " {unit}"
 
         print(string.format(**event))
 
@@ -271,8 +272,9 @@ class EventHandling(PacketHandling):
         False
         """
         for ignore in self.ignore:
-            if (ignore == event_id or
-                    (ignore.endswith('*') and event_id.startswith(ignore[:-1]))):
+            if ignore == event_id or (
+                ignore.endswith("*") and event_id.startswith(ignore[:-1])
+            ):
                 return True
         return False
 
@@ -286,13 +288,13 @@ class InverterProtocol(RflinkProtocol):
 
     def handle_event(self, event):
         """Handle incoming packet from rflink gateway."""
-        if event.get('command'):
-            if event['command'] == 'on':
-                cmd = 'off'
+        if event.get("command"):
+            if event["command"] == "on":
+                cmd = "off"
             else:
-                cmd = 'on'
+                cmd = "on"
 
-            task = self.send_command_ack(event['id'], cmd)
+            task = self.send_command_ack(event["id"], cmd)
             self.loop.create_task(task)
 
 
@@ -301,14 +303,22 @@ class RepeaterProtocol(RflinkProtocol):
 
     def handle_event(self, packet):
         """Handle incoming packet from rflink gateway."""
-        if packet.get('command'):
-            task = self.send_command_ack(packet['id'], packet['command'])
+        if packet.get("command"):
+            task = self.send_command_ack(packet["id"], packet["command"])
             self.loop.create_task(task)
 
 
-def create_rflink_connection(port=None, host=None, baud=57600, protocol=RflinkProtocol,
-                             packet_callback=None, event_callback=None,
-                             disconnect_callback=None, ignore=None, loop=None):
+def create_rflink_connection(
+    port=None,
+    host=None,
+    baud=57600,
+    protocol=RflinkProtocol,
+    packet_callback=None,
+    event_callback=None,
+    disconnect_callback=None,
+    ignore=None,
+    loop=None,
+):
     """Create Rflink manager class, returns transport coroutine."""
     # use default protocol if not specified
     protocol = partial(

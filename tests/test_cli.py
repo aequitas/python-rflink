@@ -15,21 +15,19 @@ def test_spawns(monkeypatch):
         """Wait and close loop."""
         yield from asyncio.sleep(0.1)
         loop.stop()
+
     loop = asyncio.get_event_loop()
-    if hasattr(asyncio, 'ensure_future'):
+    if hasattr(asyncio, "ensure_future"):
         ensure_future = asyncio.ensure_future
     else:  # Deprecated since Python 3.4.4
         ensure_future = getattr(asyncio, "async")
     ensure_future(stop(), loop=loop)
 
     # use simulation interface
-    args = ['--port', 'loop://', '-v']
+    args = ["--port", "loop://", "-v"]
 
     # patch to make 'loop://' work with serial_asyncio
-    monkeypatch.setattr(
-        SerialTransport,
-        '_ensure_reader', lambda self: True
-    )
+    monkeypatch.setattr(SerialTransport, "_ensure_reader", lambda self: True)
 
     # test calling results in the loop close cleanly
     assert main(args, loop=loop) is None
