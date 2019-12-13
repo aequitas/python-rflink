@@ -6,23 +6,23 @@ import pytest
 
 from rflink.protocol import PacketHandling
 
-COMPLETE_PACKET = b'20;E0;NewKaku;ID=cac142;SWITCH=1;CMD=ALLOFF;\r\n'
-INCOMPLETE_PART1 = b'20;E0;NewKaku;ID=cac'
-INCOMPLETE_PART2 = b'142;SWITCH=1;CMD=ALLOFF;\r\n'
+COMPLETE_PACKET = b"20;E0;NewKaku;ID=cac142;SWITCH=1;CMD=ALLOFF;\r\n"
+INCOMPLETE_PART1 = b"20;E0;NewKaku;ID=cac"
+INCOMPLETE_PART2 = b"142;SWITCH=1;CMD=ALLOFF;\r\n"
 
 COMPLETE_PACKET_DICT = {
-    'id': 'cac142',
-    'node': 'gateway',
-    'protocol': 'newkaku',
-    'command': 'alloff',
-    'switch': '1',
+    "id": "cac142",
+    "node": "gateway",
+    "protocol": "newkaku",
+    "command": "alloff",
+    "switch": "1",
 }
 
 
 @pytest.fixture
 def protocol(monkeypatch):
     """Rflinkprotocol instance with mocked handle_packet."""
-    monkeypatch.setattr(PacketHandling, 'handle_packet', Mock())
+    monkeypatch.setattr(PacketHandling, "handle_packet", Mock())
     return PacketHandling(None)
 
 

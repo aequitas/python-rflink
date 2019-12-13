@@ -32,52 +32,53 @@ from .protocol import (
     PacketHandling,
     RepeaterProtocol,
     RflinkProtocol,
-    create_rflink_connection
+    create_rflink_connection,
 )
 
 PROTOCOLS = {
-    'command': RflinkProtocol,
-    'event': EventHandling,
-    'print': PacketHandling,
-    'invert': InverterProtocol,
-    'repeat': RepeaterProtocol,
+    "command": RflinkProtocol,
+    "event": EventHandling,
+    "print": PacketHandling,
+    "invert": InverterProtocol,
+    "repeat": RepeaterProtocol,
 }
 
-ALL_COMMANDS = ['on', 'off', 'allon', 'alloff', 'up', 'down', 'stop', 'pair']
+ALL_COMMANDS = ["on", "off", "allon", "alloff", "up", "down", "stop", "pair"]
 
 
 def main(argv=sys.argv[1:], loop=None):
     """Parse argument and setup main program loop."""
-    args = docopt(__doc__, argv=argv,
-                  version=pkg_resources.require('rflink')[0].version)
+    args = docopt(
+        __doc__, argv=argv, version=pkg_resources.require("rflink")[0].version
+    )
 
     level = logging.ERROR
-    if args['-v']:
+    if args["-v"]:
         level = logging.INFO
-    if args['-v'] == 2:
+    if args["-v"] == 2:
         level = logging.DEBUG
     logging.basicConfig(level=level)
 
     if not loop:
         loop = asyncio.get_event_loop()
 
-    if args['--ignore']:
-        ignore = args['--ignore'].split(',')
+    if args["--ignore"]:
+        ignore = args["--ignore"].split(",")
     else:
         ignore = []
 
     command = next((c for c in ALL_COMMANDS if args[c] is True), None)
 
     if command:
-        protocol = PROTOCOLS['command']
+        protocol = PROTOCOLS["command"]
     else:
-        protocol = PROTOCOLS[args['-m']]
+        protocol = PROTOCOLS[args["-m"]]
 
     conn = create_rflink_connection(
         protocol=protocol,
-        host=args['--host'],
-        port=args['--port'],
-        baud=args['--baud'],
+        host=args["--host"],
+        port=args["--port"],
+        baud=args["--baud"],
         loop=loop,
         ignore=ignore,
     )
@@ -86,10 +87,10 @@ def main(argv=sys.argv[1:], loop=None):
 
     try:
         if command:
-            for _ in range(int(args['--repeat'])):
+            for _ in range(int(args["--repeat"])):
                 loop.run_until_complete(
-                    protocol.send_command_ack(
-                        args['<id>'], command))
+                    protocol.send_command_ack(args["<id>"], command)
+                )
         else:
             loop.run_forever()
     except KeyboardInterrupt:
