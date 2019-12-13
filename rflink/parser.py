@@ -298,7 +298,7 @@ def decode_packet(packet: str) -> dict:
     for attr in filter(None, attrs.strip(DELIM).split(DELIM)):
         key, value = attr.lower().split("=")
         if key in VALUE_TRANSLATION:
-            value = VALUE_TRANSLATION.get(key)(value)
+            value = VALUE_TRANSLATION[key](value)
         name = PACKET_FIELDS.get(key, key)
         data[name] = value
         unit = UNITS.get(key, None)
@@ -315,7 +315,8 @@ def decode_packet(packet: str) -> dict:
 
 def parse_banner(banner: str) -> dict:
     """Extract hardware/firmware name and version from banner."""
-    return re.match(BANNER_RE, banner).groupdict()
+    match = re.match(BANNER_RE, banner)
+    return match.groupdict() if match else {}
 
 
 def encode_packet(packet: dict) -> str:
