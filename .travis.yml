@@ -13,6 +13,9 @@ matrix:
   allow_failures:
   - python: 2.7
   - python: pypy3
+  include:
+    - python: 3.7
+      env: TOXENV=typing
 deploy:
   provider: pypi
   user: aequitas
@@ -21,7 +24,11 @@ deploy:
   distributions: "sdist bdist_wheel"
   on:
     tags: true
-    python: 3.7  # prevent deploying multiple times (an therefore causing deploys to fail)
+    # python and condition are here to prevent deploying multiple times, which
+    # would fail: deploy only when running specified python version and empty
+    # $TOXENV.
+    python: 3.7
+    condition: -z $TOXENV
     repo: aequitas/python-rflink
 after_success:
   - coveralls
