@@ -4,6 +4,7 @@ python:
 - 3.4
 - 3.6
 - 3.7
+- 3.8
 - 2.7
 - pypy3
 install: pip install tox-travis python-coveralls codeclimate-test-reporter
