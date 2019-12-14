@@ -73,7 +73,7 @@ Usage of RFLink debug CLI
       --host=<host>      TCP mode, connect to host instead of serial port.
       --repeat=<repeat>  How often to repeat a command [default: 1].
       -m=<handling>      How to handle incoming packets [default: event].
-      --ignore=<ignore>  List of device ids to ignore, end with * to match wildcard.
+      --ignore=<ignore>  List of device ids to ignore, wildcards supported.
       -h --help          Show this screen.
       -v                 Increase verbosity
       --version          Show version.

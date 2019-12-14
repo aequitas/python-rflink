@@ -7,6 +7,7 @@ import asyncio
 import concurrent
 import logging
 from datetime import timedelta
+from fnmatch import fnmatchcase
 from functools import partial
 from typing import Callable, List
 
@@ -272,9 +273,7 @@ class EventHandling(PacketHandling):
         False
         """
         for ignore in self.ignore:
-            if ignore == event_id or (
-                ignore.endswith("*") and event_id.startswith(ignore[:-1])
-            ):
+            if fnmatchcase(event_id, ignore):
                 return True
         return False
 
