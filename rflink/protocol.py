@@ -334,7 +334,6 @@ def create_rflink_connection(
     if host:
         conn = loop.create_connection(protocol, host, port)
     else:
-        baud = baud
         conn = create_serial_connection(loop, protocol, port, baud)
 
     return conn
