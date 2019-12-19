@@ -183,7 +183,7 @@ class CommandSerialization(ProtocolBase):
                 )
                 log.debug("packet acknowledged")
             except concurrent.futures._base.TimeoutError:
-                acknowledgement = {"ok": False, "message": "timeout"}
+                acknowledgement = False
                 log.warning("acknowledge timeout")
             else:
                 acknowledgement = self._last_ack.get("ok", False)
