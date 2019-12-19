@@ -54,6 +54,7 @@ setup(
     ],
     keywords="rflink 433mhz domotica",
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
+    package_data={"rflink": ["py.typed"]},
     install_requires=[
         "async_timeout",
         "docopt",
