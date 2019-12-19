@@ -5,9 +5,8 @@
 
 import re
 import time
-from collections import defaultdict
 from enum import Enum
-from typing import Any, Callable, Dict, Generator, cast
+from typing import Any, Callable, DefaultDict, Dict, Generator, cast
 
 UNKNOWN = "unknown"
 SWITCH_COMMAND_TEMPLATE = "{node};{protocol};{id};{switch};{command};"
@@ -90,6 +89,8 @@ PACKET_HEADER_RE = (
     + ");$"
 )
 packet_header_re = re.compile(PACKET_HEADER_RE)
+
+PacketType = Dict[str, Any]
 
 
 class PacketHeader(Enum):
@@ -201,7 +202,7 @@ def signed_to_float(hex: str) -> float:
 
 
 VALUE_TRANSLATION = cast(
-    Dict[str, Callable],
+    Dict[str, Callable[[str], str]],
     {
         "awinsp": lambda hex: int(hex, 16) / 10,
         "baro": lambda hex: int(hex, 16),
@@ -252,7 +253,7 @@ def valid_packet(packet: str) -> bool:
     return bool(packet_header_re.match(packet))
 
 
-def decode_packet(packet: str) -> dict:
+def decode_packet(packet: str) -> PacketType:
     """Break packet down into primitives, and do basic interpretation.
 
     >>> decode_packet('20;06;Kaku;ID=41;SWITCH=1;CMD=ON;') == {
@@ -266,7 +267,7 @@ def decode_packet(packet: str) -> dict:
     """
     node_id, _, protocol, attrs = packet.split(DELIM, 3)
 
-    data = cast(Dict[str, Any], {"node": PacketHeader(node_id).name})
+    data = cast(PacketType, {"node": PacketHeader(node_id).name})
 
     # make exception for version response
     data["protocol"] = UNKNOWN
@@ -321,13 +322,13 @@ def decode_packet(packet: str) -> dict:
     return data
 
 
-def parse_banner(banner: str) -> dict:
+def parse_banner(banner: str) -> Dict[str, str]:
     """Extract hardware/firmware name and version from banner."""
     match = re.match(BANNER_RE, banner)
     return match.groupdict() if match else {}
 
 
-def encode_packet(packet: dict) -> str:
+def encode_packet(packet: PacketType) -> str:
     """Construct packet string from packet dictionary.
 
     >>> encode_packet({
@@ -339,11 +340,11 @@ def encode_packet(packet: dict) -> str:
     '10;newkaku;000001;01;on;'
     """
     if packet["protocol"] == "rfdebug":
-        return "10;RFDEBUG=" + packet["command"] + ";"
+        return "10;RFDEBUG=%s;" % packet["command"]
     elif packet["protocol"] == "rfudebug":
-        return "10;RFUDEBUG=" + packet["command"] + ";"
+        return "10;RFUDEBUG=%s;" % packet["command"]
     elif packet["protocol"] == "qrfdebug":
-        return "10;QRFDEBUG=" + packet["command"] + ";"
+        return "10;QRFDEBUG=%s;" % packet["command"]
     else:
         return SWITCH_COMMAND_TEMPLATE.format(node=PacketHeader.master.value, **packet)
 
@@ -367,10 +368,10 @@ translate_protocols = [
 ]
 
 
-class TranslationsDict(defaultdict):
+class TranslationsDict(DefaultDict[str, str]):
     """Generate translations for Rflink protocols to serializable names."""
 
-    def __missing__(self, key):
+    def __missing__(self, key: str) -> str:
         """If translation does not exist yet add it and its reverse."""
         value = re.sub(r"[^a-z0-9_]+", "", key.lower())
         self[key.lower()] = value
@@ -382,7 +383,7 @@ protocol_translations = TranslationsDict(None)
 [protocol_translations[protocol] for protocol in translate_protocols]
 
 
-def serialize_packet_id(packet: dict) -> str:
+def serialize_packet_id(packet: PacketType) -> str:
     """Serialize packet identifiers into one reversible string.
 
     >>> serialize_packet_id({
@@ -420,7 +421,7 @@ def serialize_packet_id(packet: dict) -> str:
     )
 
 
-def deserialize_packet_id(packet_id: str) -> dict:
+def deserialize_packet_id(packet_id: str) -> Dict[str, str]:
     r"""Turn a packet id into individual packet components.
 
     >>> deserialize_packet_id('newkaku_000001_01') == {
@@ -457,7 +458,7 @@ def deserialize_packet_id(packet_id: str) -> dict:
     return packet_identifiers
 
 
-def packet_events(packet: dict) -> Generator:
+def packet_events(packet: PacketType) -> Generator[PacketType, None, None]:
     """Return list of all events in the packet.
 
     >>> x = list(packet_events({
