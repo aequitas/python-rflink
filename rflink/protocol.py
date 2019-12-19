@@ -128,8 +128,7 @@ class PacketHandling(ProtocolBase):
             if "ok" in packet:
                 # handle response packets internally
                 log.debug("command response: %s", packet)
-                self._last_ack = packet
-                self._command_ack.set()
+                self.handle_response_packet(packet)
             else:
                 self.handle_packet(packet)
         else:
@@ -142,6 +141,10 @@ class PacketHandling(ProtocolBase):
             self.packet_callback(packet)
         else:
             print("packet", packet)
+
+    def handle_response_packet(self, packet) -> None:
+        """Handle response packet."""
+        raise NotImplementedError()
 
     def send_packet(self, fields):
         """Concat fields and send packet to gateway."""
@@ -165,6 +168,11 @@ class CommandSerialization(ProtocolBase):
             self.packet_callback = packet_callback
         self._command_ack = asyncio.Event(loop=self.loop)
         self._ready_to_send = asyncio.Lock(loop=self.loop)
+
+    def handle_response_packet(self, packet) -> None:
+        """Handle response packet."""
+        self._last_ack = packet
+        self._command_ack.set()
 
     @asyncio.coroutine
     def send_command_ack(self, device_id, action):
