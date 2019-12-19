@@ -22,14 +22,17 @@ Options:
 import asyncio
 import logging
 import sys
+from typing import Dict, Optional, Sequence, Type  # noqa: unused-import
 
 import pkg_resources
 from docopt import docopt
 
-from .protocol import (
+from .protocol import (  # noqa: unused-import
+    CommandSerialization,
     EventHandling,
     InverterProtocol,
     PacketHandling,
+    ProtocolBase,
     RepeaterProtocol,
     RflinkProtocol,
     create_rflink_connection,
@@ -41,12 +44,14 @@ PROTOCOLS = {
     "print": PacketHandling,
     "invert": InverterProtocol,
     "repeat": RepeaterProtocol,
-}
+}  # type: Dict[str, Type[ProtocolBase]]
 
 ALL_COMMANDS = ["on", "off", "allon", "alloff", "up", "down", "stop", "pair"]
 
 
-def main(argv=sys.argv[1:], loop=None):
+def main(
+    argv: Sequence[str] = sys.argv[1:], loop: Optional[asyncio.AbstractEventLoop] = None
+) -> None:
     """Parse argument and setup main program loop."""
     args = docopt(
         __doc__, argv=argv, version=pkg_resources.require("rflink")[0].version
@@ -70,12 +75,12 @@ def main(argv=sys.argv[1:], loop=None):
     command = next((c for c in ALL_COMMANDS if args[c] is True), None)
 
     if command:
-        protocol = PROTOCOLS["command"]
+        protocol_type = PROTOCOLS["command"]
     else:
-        protocol = PROTOCOLS[args["-m"]]
+        protocol_type = PROTOCOLS[args["-m"]]
 
     conn = create_rflink_connection(
-        protocol=protocol,
+        protocol=protocol_type,
         host=args["--host"],
         port=args["--port"],
         baud=args["--baud"],
@@ -87,6 +92,7 @@ def main(argv=sys.argv[1:], loop=None):
 
     try:
         if command:
+            assert isinstance(protocol, CommandSerialization)
             for _ in range(int(args["--repeat"])):
                 loop.run_until_complete(
                     protocol.send_command_ack(args["<id>"], command)
