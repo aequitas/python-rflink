@@ -68,7 +68,7 @@ class ProtocolBase(asyncio.Protocol):
             else:
                 log.warning("dropping invalid data: %s", line)
 
-    def handle_raw_packet(self, raw_packet: bytes) -> None:
+    def handle_raw_packet(self, raw_packet: str) -> None:
         """Handle one raw incoming packet."""
         raise NotImplementedError()
 
