@@ -1,10 +1,9 @@
-"""Basic testing for CLI."""
+"""Basic testing for proxy."""
 
 import asyncio
 
+from rflinkproxy.__main__ import main
 from serial_asyncio import SerialTransport
-
-from rflink.__main__ import main
 
 
 def test_spawns(monkeypatch):

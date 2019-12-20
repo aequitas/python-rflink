@@ -6,7 +6,7 @@ Usage:
   rflinkproxy --version
 
 Options:
-  --listenport=<port>  Port to listen on
+  --listenport=<port>  Port to listen on [default: 1337]
   --port=<port>        Serial port to connect to [default: /dev/ttyACM0],
                          or TCP port in TCP mode.
   --baud=<baud>        Serial baud rate [default: 57600].
@@ -81,7 +81,7 @@ class ProxyProtocol(RflinkProtocol):
 def decode_tx_packet(packet: str) -> dict:
     """Break packet down into primitives, and do basic interpretation.
 
-    >>> decode_packet('10;Kaku;ID=41;SWITCH=1;CMD=ON;') == {
+    >>> decode_packet('20;06;Kaku;ID=41;SWITCH=1;CMD=ON;') == {
     ...     'node': 'gateway',
     ...     'protocol': 'kaku',
     ...     'id': '000041',

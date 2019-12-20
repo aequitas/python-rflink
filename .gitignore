@@ -53,6 +53,9 @@ coverage.xml
 .venv/
 venv/
 ENV/
+.env/
 
 # direnv
 .direnv
+
+.mypy_cache/

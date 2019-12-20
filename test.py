@@ -5,7 +5,7 @@ import rflink.manager
 
 logging.basicConfig(level=logging.DEBUG)
 
-loop = asyncio.get_event_loop()
+loop = asyncio.new_event_loop()
 
 m = rflink.manager.create_rflink_connection(
     rflink.manager.Inverter, host="hass", port="1234", loop=loop
