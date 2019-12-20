@@ -228,7 +228,8 @@ class RFLinkProxy:
             log.warning("disconnected from Rflink, reconnecting")
             self.loop.create_task(self.connect())
 
-    async def connect(self):
+    @asyncio.coroutine
+    def connect(self):
         """Set up connection and hook it into HA for reconnect/shutdown."""
         import serial
 
@@ -255,7 +256,7 @@ class RFLinkProxy:
 
         try:
             with async_timeout.timeout(CONNECTION_TIMEOUT, loop=self.loop):
-                self.transport, self.protocol = await connection
+                self.transport, self.protocol = yield from connection
 
         except (
             serial.serialutil.SerialException,

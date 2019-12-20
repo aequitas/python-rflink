@@ -9,6 +9,9 @@ from rflink.__main__ import main
 
 def test_spawns(monkeypatch):
     """At least test if the CLI doesn't error on load."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     # setup task to stop CLI loop
     @asyncio.coroutine
     def stop():
@@ -16,7 +19,6 @@ def test_spawns(monkeypatch):
         yield from asyncio.sleep(0.1)
         loop.stop()
 
-    loop = asyncio.new_event_loop()
     if hasattr(asyncio, "ensure_future"):
         ensure_future = asyncio.ensure_future
     else:  # Deprecated since Python 3.4.4
