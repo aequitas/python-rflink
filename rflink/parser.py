@@ -25,8 +25,9 @@ CONTROL_COMMAND = "[A-Z]+(=[A-Z0-9]+)?"
 DATA = "[a-zA-Z0-9;=_]+"
 DEBUG_DATA = "[a-zA-Z0-9,;=_()]+"
 RESPONSES = "OK"
-VERSION = "[0-9a-zA-Z .-]+"
+VERSION = r"[0-9a-zA-Z \.-]+"
 DEBUG = "DEBUG"
+MESSAGE = r"[0-9a-zA-Z \._-]+"
 
 # 10;NewKaku;0cac142;3;ON;
 PACKET_COMMAND = DELIM.join(["10", PROTOCOL, ADDRESS, BUTTON, COMMAND])
@@ -46,6 +47,8 @@ PACKET_RESPONSE = DELIM.join(["20", SEQUENCE, RESPONSES])
 PACKET_DEVICE = DELIM.join(["20", SEQUENCE, PROTOCOL, DATA])
 # 20;00;Nodo RadioFrequencyLink - RFLink Gateway V1.1 - R46;
 PACKET_VERSION = DELIM.join(["20", SEQUENCE, VERSION])
+# 20;00;Internal Pullup on RF-in disabled
+PACKET_INFO = DELIM.join(["20", SEQUENCE, MESSAGE])
 
 # 20;75;DEBUG;Pulses=90;Pulses(uSec)=1200,2760,120...
 PACKET_DEBUG = DELIM.join(["20", SEQUENCE, DEBUG, DEBUG_DATA])
@@ -75,6 +78,7 @@ PACKET_HEADER_RE = (
             PACKET_COMMAND4,
             PACKET_CONTROL,
             PACKET_DEBUG,
+            PACKET_INFO,
             PACKET_RFDEBUGN,
             PACKET_RFUDEBUGN,
             PACKET_RFDEBUGF,
@@ -289,6 +293,10 @@ def decode_packet(packet: str) -> dict:
     # ok response
     elif protocol == "OK":
         data["ok"] = True
+
+    # generic message from gateway
+    elif node_id == "20" and not attrs:
+        data["message"] = protocol
 
     # its a regular packet
     else:
