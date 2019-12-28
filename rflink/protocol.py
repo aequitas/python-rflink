@@ -53,6 +53,7 @@ class ProtocolBase(asyncio.Protocol):
         self,
         loop: Optional[asyncio.AbstractEventLoop] = None,
         disconnect_callback: Optional[Callable[[Optional[Exception]], None]] = None,
+        **kwargs: Any
     ) -> None:
         """Initialize class."""
         if loop:
