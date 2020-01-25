@@ -7,11 +7,13 @@ python:
 - 3.8
 - 2.7
 - pypy3
-install: pip install tox-travis python-coveralls codeclimate-test-reporter
+# python-coveralls 5.0 no longer supports python34
+install: pip install tox-travis codeclimate-test-reporter
 script: tox
 matrix:
   allow_failures:
   - python: 2.7
+  - python: 3.4
   - python: pypy3
   include:
     - python: 3.7
