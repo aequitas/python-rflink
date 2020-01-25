@@ -151,7 +151,7 @@ class PacketHandling(ProtocolBase):
         try:
             packet = decode_packet(raw_packet)
         except BaseException:
-            log.exception("failed to parse packet: %s", packet)
+            log.exception("failed to parse packet data: %s", raw_packet)
 
         log.debug("decoded packet: %s", packet)
 
