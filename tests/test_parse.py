@@ -80,6 +80,10 @@ PROTOCOL_SAMPLES = os.path.join(os.path.dirname(__file__), "protocol_samples.txt
             "20;00;Internal Pullup on RF-in disabled;",
             {"message": "Internal Pullup on RF-in disabled"},
         ],
+        [
+            "20;9A;FA500;ID=0000db9e;SWITCH=01;CMD=SET_LEVEL=2;",
+            {"command": "set_level=2"},
+        ],
     ],
 )
 def test_packet_parsing(packet, expect):

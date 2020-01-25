@@ -305,7 +305,7 @@ def decode_packet(packet: str) -> PacketType:
 
     # convert key=value pairs where needed
     for attr in filter(None, attrs.strip(DELIM).split(DELIM)):
-        key, value = attr.lower().split("=")
+        key, value = attr.lower().split("=", 1)
         if key in VALUE_TRANSLATION:
             value = VALUE_TRANSLATION[key](value)
         name = PACKET_FIELDS.get(key, key)
