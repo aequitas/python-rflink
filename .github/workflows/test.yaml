@@ -1,0 +1,11 @@
+name: Test
+on: [push]
+
+jobs:
+  build:
+    name: Test
+    # This job runs on Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tox
+        uses:  tox-dev/gh-action-tox@master
