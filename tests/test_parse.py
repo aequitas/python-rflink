@@ -86,7 +86,7 @@ PROTOCOL_SAMPLES = os.path.join(os.path.dirname(__file__), "protocol_samples.txt
         ],
         [
             "20;84;Debug;RTS P1;a63f33003cf000665a5a;",
-            {"message": "Debug RTS"},
+            {"rts_p1": "a63f33003cf000665a5a"},
         ],
     ],
 )
