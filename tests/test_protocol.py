@@ -35,6 +35,7 @@ VERSION_DICT = {
     'revision': '48'
 }
 
+
 @pytest.fixture
 def protocol(monkeypatch):
     """Rflinkprotocol instance with mocked handle_packet."""
@@ -83,13 +84,16 @@ def test_multiple_packets(protocol):
 
 
 def test_gpio_packet(protocol):
+    """ GPIO status received correctly """
     protocol.data_received(GPIO_PACKET)
     protocol.handle_packet.assert_called_with(GPIO_PACKET_DICT)
 
 
 def test_version_packet(protocol):
+    """ Firmware version message handled correctly """
     protocol.data_received(VERSION_PACKET)
     protocol.handle_packet.assert_called_with(VERSION_DICT)
+
 
 @pytest.mark.parametrize(
     "ignore,expected",
