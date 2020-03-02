@@ -9,8 +9,6 @@ from rflink.protocol import EventHandling, PacketHandling
 COMPLETE_PACKET = b"20;E0;NewKaku;ID=cac142;SWITCH=1;CMD=ALLOFF;\r\n"
 INCOMPLETE_PART1 = b"20;E0;NewKaku;ID=cac"
 INCOMPLETE_PART2 = b"142;SWITCH=1;CMD=ALLOFF;\r\n"
-GPIO_PACKET = b"20;01;setGPIO=ON;\r\n"
-VERSION_PACKET = b"20;00;Nodo RadioFrequencyLink - RFLink Gateway V1.1 - R48;\r\n"
 
 COMPLETE_PACKET_DICT = {
     "id": "cac142",
@@ -18,21 +16,6 @@ COMPLETE_PACKET_DICT = {
     "protocol": "newkaku",
     "command": "alloff",
     "switch": "1",
-}
-
-GPIO_PACKET_DICT = {
-    'node': 'gateway',
-    'protocol': 'unknown',
-    'setgpio': 'on'
-}
-
-VERSION_DICT = {
-    "node": "gateway",
-    'protocol': 'unknown',
-    'hardware': 'Nodo RadioFrequencyLink',
-    'firmware': 'RFLink Gateway',
-    'version': '1.1',
-    'revision': '48'
 }
 
 
@@ -81,18 +64,6 @@ def test_multiple_packets(protocol):
 
     assert protocol.handle_packet.call_count == 2
     protocol.handle_packet.assert_called_with(COMPLETE_PACKET_DICT)
-
-
-def test_gpio_packet(protocol):
-    """ GPIO status received correctly """
-    protocol.data_received(GPIO_PACKET)
-    protocol.handle_packet.assert_called_with(GPIO_PACKET_DICT)
-
-
-def test_version_packet(protocol):
-    """ Firmware version message handled correctly """
-    protocol.data_received(VERSION_PACKET)
-    protocol.handle_packet.assert_called_with(VERSION_DICT)
 
 
 @pytest.mark.parametrize(
