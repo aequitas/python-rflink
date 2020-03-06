@@ -139,3 +139,15 @@ def test_packet_valiation(packet):
     http://www.nemcon.nl/blog2/protref
     """
     assert valid_packet(packet)
+
+
+def test_invalid_type():
+    """Packet where a value type cannot be converted to expected type should not error."""
+    packet = "20;2D;RFX10METER;ID=79;TYPE=10;METER=7ef36;"
+
+    assert decode_packet(packet) == {
+        "node": "gateway",
+        "protocol": "rfx10meter",
+        "id": "79",
+        "type": "10",
+    }

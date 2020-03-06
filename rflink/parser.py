@@ -3,10 +3,13 @@
 # ./.homeassistant/deps/lib/python/site-packages/rflink/parser.py
 # /Library/Frameworks/Python.framework/Versions/3.6//lib/python3.6/site-packages/rflink/parser.py
 
+import logging
 import re
 import time
 from enum import Enum
 from typing import Any, Callable, DefaultDict, Dict, Generator, cast
+
+log = logging.getLogger(__name__)
 
 UNKNOWN = "unknown"
 SWITCH_COMMAND_TEMPLATE = "{node};{protocol};{id};{switch};{command};"
@@ -322,7 +325,16 @@ def decode_packet(packet: str) -> PacketType:
             continue
         key, value = attr.lower().split("=", 1)
         if key in VALUE_TRANSLATION:
-            value = VALUE_TRANSLATION[key](value)
+            try:
+                value = VALUE_TRANSLATION[key](value)
+            except ValueError:
+                log.warning(
+                    "Could not convert attr '%s' value '%s' to expected type '%s'",
+                    key,
+                    value,
+                    VALUE_TRANSLATION[key].__name__,
+                )
+                continue
         name = PACKET_FIELDS.get(key, key)
         data[name] = value
         unit = UNITS.get(key, None)
