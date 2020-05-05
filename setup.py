@@ -90,4 +90,7 @@ setup(
             "rflinkproxy=rflinkproxy.__main__:main",
         ],
     },
+    project_urls={
+        "Release notes": "https://github.com/aequitas/python-rflink/releases",
+    },
 )
