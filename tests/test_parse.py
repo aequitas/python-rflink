@@ -128,9 +128,9 @@ def test_units():
 @pytest.mark.parametrize(
     "packet",
     [
-        l.strip()
-        for l in open(PROTOCOL_SAMPLES).readlines()
-        if l.strip() and l[0] != "#"
+        line.strip()
+        for line in open(PROTOCOL_SAMPLES).readlines()
+        if line.strip() and line[0] != "#"
     ],
 )
 def test_packet_valiation(packet):
@@ -151,3 +151,9 @@ def test_invalid_type():
         "id": "79",
         "type": "10",
     }
+
+
+@pytest.mark.parametrize("device_id", ["dooya_v4_6d5f8e00_3f"])
+def test_underscored(device_id):
+    """Test parsing device id's that contain underscores."""
+    assert deserialize_packet_id(device_id)

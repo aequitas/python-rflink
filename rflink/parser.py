@@ -467,7 +467,12 @@ def deserialize_packet_id(packet_id: str) -> Dict[str, str]:
     if packet_id == "rflink":
         return {"protocol": UNKNOWN}
 
-    protocol, *id_switch = packet_id.split(PACKET_ID_SEP)
+    if packet_id.startswith("dooya_v4"):
+        protocol = "dooya_v4"
+        id_switch = packet_id.replace("dooya_v4_", "").split(PACKET_ID_SEP)
+    else:
+        protocol, *id_switch = packet_id.split(PACKET_ID_SEP)
+
     assert len(id_switch) < 3
 
     packet_identifiers = {
