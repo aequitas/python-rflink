@@ -479,8 +479,9 @@ def deserialize_packet_id(packet_id: str) -> Dict[str, str]:
     if packet_id == "rflink":
         return {"protocol": UNKNOWN}
 
+    # Protocol names can contain underscores themselves (like: dooya_v4), using rsplit to
+    # prevent parsing issues with these kind of packets.
     protocol, *id_switch = packet_id.rsplit(PACKET_ID_SEP, 2)
-    assert len(id_switch) < 3
 
     packet_identifiers = {
         # lookup the reverse translation of the protocol in the translation
