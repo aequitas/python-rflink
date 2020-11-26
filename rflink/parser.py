@@ -463,16 +463,23 @@ def deserialize_packet_id(packet_id: str) -> Dict[str, str]:
     ...     'switch': '0',
     ... }
     True
+    >>> deserialize_packet_id('dooya_v4_6d5f8e00_3f') == {
+    ...     'protocol': 'dooya_v4',
+    ...     'id': '6d5f8e00',
+    ...     'switch': '3f',
+    ... }
+    True
+    >>> deserialize_packet_id('mertik_gv60_038527_13') == {
+    ...     'protocol': 'mertik_gv60',
+    ...     'id': '038527',
+    ...     'switch': '13',
+    ... }
+    True
     """
     if packet_id == "rflink":
         return {"protocol": UNKNOWN}
 
-    if packet_id.startswith("dooya_v4"):
-        protocol = "dooya_v4"
-        id_switch = packet_id.replace("dooya_v4_", "").split(PACKET_ID_SEP)
-    else:
-        protocol, *id_switch = packet_id.split(PACKET_ID_SEP)
-
+    protocol, *id_switch = packet_id.rsplit(PACKET_ID_SEP, 2)
     assert len(id_switch) < 3
 
     packet_identifiers = {
