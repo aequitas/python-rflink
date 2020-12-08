@@ -31,7 +31,7 @@ http://www.nemcon.nl/blog2/
 Requirements
 ------------
 
-- Python 3.4 (or higher)
+- Python 2.7 or 3.6 (or higher)
 
 Description
 -----------
@@ -39,11 +39,6 @@ Description
 This package is created mainly as a library for the Home assistant Rflink component implementation. A CLI has been created mainly for debugging purposes but may be extended in the future for more real-world application if needed.
 
 The package also provides a CLI utility which allows a single RFLink hardware to be shared by multiple clients, e.g. Home assistant + Domoticz or multiple Home assistant instances.
-
-Changes
--------
-
-- 01-11-2018 - `rflinkproxy` CLI command added, thanks to a contribution by emontnemery.
 
 Installation
 ------------
