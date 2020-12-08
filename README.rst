@@ -1,8 +1,8 @@
 Python RFlink library
 =====================
 
-.. image:: https://travis-ci.org/aequitas/python-rflink.svg?branch=master
-    :target: https://travis-ci.org/aequitas/python-rflink
+.. image:: https://github.com/aequitas/python-rflink/workflows/Push/badge.svg
+    :target: https://github.com/aequitas/python-rflink/actions?query=workflow%3APush
 
 .. image:: https://img.shields.io/pypi/v/rflink.svg
     :target: https://pypi.python.org/pypi/rflink

@@ -1,4 +1,4 @@
-name: Test
+name: Push
 
 on: push
 
@@ -35,6 +35,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
+    if: startsWith(github.ref, 'refs/tags')
+
     needs: test
 
     steps:
@@ -53,7 +55,6 @@ jobs:
           python -m build --sdist --wheel --outdir dist/ .
 
       - name: Publish distribution to PyPI
-        if: startsWith(github.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@master
         with:
           password: ${{ secrets.pypi_password }}
