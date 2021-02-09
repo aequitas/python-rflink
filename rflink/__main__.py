@@ -7,20 +7,16 @@ Usage:
   rflink --version
 
 Options:
-  -p --port=<port>         Serial port to connect to [default: /dev/ttyACM0],
-                             or TCP port in TCP mode.
-  --baud=<baud>            Serial baud rate [default: 57600].
-  --host=<host>            TCP mode, connect to host instead of serial port.
-  --repeat=<repeat>        How often to repeat a command [default: 1].
-  --keepalive              Enable TCP Keepalive [default: False].
-  --keepidle=<NUMBER>      TCP Keepalive IDLE timer [default: None]
-  --keepinterval=<NUMBER>  TCP Keepalive Interval timer
-  --keepcount=<NUMBER>     TCP Keepalive missed ACK count
-  -m=<handling>            How to handle incoming packets [default: event].
-  --ignore=<ignore>        List of device ids to ignore, wildcards supported.
-  -h --help                Show this screen.
-  -v                       Increase verbosity
-  --version                Show version.
+  -p --port=<port>   Serial port to connect to [default: /dev/ttyACM0],
+                       or TCP port in TCP mode.
+  --baud=<baud>      Serial baud rate [default: 57600].
+  --host=<host>      TCP mode, connect to host instead of serial port.
+  --repeat=<repeat>  How often to repeat a command [default: 1].
+  -m=<handling>      How to handle incoming packets [default: event].
+  --ignore=<ignore>  List of device ids to ignore, wildcards supported.
+  -h --help          Show this screen.
+  -v                 Increase verbosity
+  --version          Show version.
 """
 
 import asyncio
@@ -83,18 +79,6 @@ def main(
     else:
         protocol_type = PROTOCOLS[args["-m"]]
 
-    keep_idle = None
-    if type(args["--keepidle"]) is str:
-        keep_idle = int(args["--keepidle"])
-
-    keep_interval = None
-    if type(args["--keepinterval"]) is str:
-        keep_interval = int(args["--keepinterval"])
-
-    keep_count = None
-    if type(args["--keepcount"]) is str:
-        keep_count = int(args["--keepcount"])
-
     conn = create_rflink_connection(
         protocol=protocol_type,
         host=args["--host"],
@@ -102,10 +86,6 @@ def main(
         baud=args["--baud"],
         loop=loop,
         ignore=ignore,
-        keep_alive=args["--keepalive"],
-        keep_idle=keep_idle,
-        keep_interval=keep_interval,
-        keep_count=keep_count
     )
 
     transport, protocol = loop.run_until_complete(conn)
