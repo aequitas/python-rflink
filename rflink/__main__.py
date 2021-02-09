@@ -7,16 +7,17 @@ Usage:
   rflink --version
 
 Options:
-  -p --port=<port>   Serial port to connect to [default: /dev/ttyACM0],
-                       or TCP port in TCP mode.
-  --baud=<baud>      Serial baud rate [default: 57600].
-  --host=<host>      TCP mode, connect to host instead of serial port.
-  --repeat=<repeat>  How often to repeat a command [default: 1].
-  -m=<handling>      How to handle incoming packets [default: event].
-  --ignore=<ignore>  List of device ids to ignore, wildcards supported.
-  -h --help          Show this screen.
-  -v                 Increase verbosity
-  --version          Show version.
+  -p --port=<port>         Serial port to connect to [default: /dev/ttyACM0],
+                             or TCP port in TCP mode.
+  --baud=<baud>            Serial baud rate [default: 57600].
+  --host=<host>            TCP mode, connect to host instead of serial port.
+  --repeat=<repeat>        How often to repeat a command [default: 1].
+  --keepalive=<NUMBER>     Enable TCP Keepalive IDLE timer in seconds.
+  -m=<handling>            How to handle incoming packets [default: event].
+  --ignore=<ignore>        List of device ids to ignore, wildcards supported.
+  -h --help                Show this screen.
+  -v                       Increase verbosity
+  --version                Show version.
 """
 
 import asyncio
@@ -79,6 +80,10 @@ def main(
     else:
         protocol_type = PROTOCOLS[args["-m"]]
 
+    keepalive = None
+    if type(args["--keepalive"]) is str:
+        keepalive = int(args["--keepalive"])
+
     conn = create_rflink_connection(
         protocol=protocol_type,
         host=args["--host"],
@@ -86,6 +91,7 @@ def main(
         baud=args["--baud"],
         loop=loop,
         ignore=ignore,
+        keepalive=keepalive,
     )
 
     transport, protocol = loop.run_until_complete(conn)

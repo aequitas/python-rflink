@@ -23,6 +23,8 @@ from typing import (
     overload,
 )
 
+import socket
+
 from serial_asyncio import create_serial_connection
 
 from .parser import (
@@ -42,17 +44,21 @@ log = logging.getLogger(__name__)
 rflink_log = None
 
 TIMEOUT = timedelta(seconds=5)
+DEFAULT_TCP_KEEPALIVE_INTERVAL = 20
+DEFAULT_TCP_KEEPALIVE_COUNT = 3
 
 
 class ProtocolBase(asyncio.Protocol):
     """Manage low level rflink protocol."""
 
     transport = None  # type: asyncio.BaseTransport
+    keepalive = None  # type: Optional[int]
 
     def __init__(
         self,
         loop: Optional[asyncio.AbstractEventLoop] = None,
         disconnect_callback: Optional[Callable[[Optional[Exception]], None]] = None,
+        keepalive: Optional[int] = None,
         **kwargs: Any
     ) -> None:
         """Initialize class."""
@@ -64,11 +70,35 @@ class ProtocolBase(asyncio.Protocol):
         self.buffer = ""
         self.packet_callback = None  # type: Optional[Callable[[PacketType], None]]
         self.disconnect_callback = disconnect_callback
+        self.keepalive = keepalive
 
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """Just logging for now."""
         self.transport = transport
         log.debug("connected")
+        sock = transport.get_extra_info("socket")
+        if self.keepalive is not None and socket is not None:
+            log.debug(
+                "applying TCP KEEPALIVE settings: IDLE={}/INTVL={}/CNT={}".format(
+                    self.keepalive,
+                    DEFAULT_TCP_KEEPALIVE_INTERVAL,
+                    DEFAULT_TCP_KEEPALIVE_COUNT,
+                )
+            )
+            if hasattr(socket, "SO_KEEPALIVE"):
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            if hasattr(socket, "TCP_KEEPIDLE"):
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, self.keepalive)
+            if hasattr(socket, "TCP_KEEPINTVL"):
+                sock.setsockopt(
+                    socket.IPPROTO_TCP,
+                    socket.TCP_KEEPINTVL,
+                    DEFAULT_TCP_KEEPALIVE_INTERVAL,
+                )
+            if hasattr(socket, "TCP_KEEPCNT"):
+                sock.setsockopt(
+                    socket.IPPROTO_TCP, socket.TCP_KEEPCNT, DEFAULT_TCP_KEEPALIVE_COUNT
+                )
 
     def data_received(self, data: bytes) -> None:
         """Add incoming data to buffer."""
@@ -362,6 +392,7 @@ def create_rflink_connection(
     port: int,
     host: str,
     baud: int = 57600,
+    keepalive: Optional[int] = None,
     protocol: Type[ProtocolBase] = RflinkProtocol,
     packet_callback: Optional[Callable[[PacketType], None]] = None,
     event_callback: Optional[Callable[[PacketType], None]] = None,
@@ -378,6 +409,7 @@ def create_rflink_connection(
     port: str,
     host: None = None,
     baud: int = 57600,
+    keepalive: None = None,
     protocol: Type[ProtocolBase] = RflinkProtocol,
     packet_callback: Optional[Callable[[PacketType], None]] = None,
     event_callback: Optional[Callable[[PacketType], None]] = None,
@@ -393,6 +425,7 @@ def create_rflink_connection(
     port: Union[None, str, int] = None,
     host: Optional[str] = None,
     baud: int = 57600,
+    keepalive: Optional[int] = None,
     protocol: Type[ProtocolBase] = RflinkProtocol,
     packet_callback: Optional[Callable[[PacketType], None]] = None,
     event_callback: Optional[Callable[[PacketType], None]] = None,
@@ -411,6 +444,7 @@ def create_rflink_connection(
         event_callback=event_callback,
         disconnect_callback=disconnect_callback,
         ignore=ignore if ignore else [],
+        keepalive=keepalive,
     )
 
     # setup serial connection if no transport specified
