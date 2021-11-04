@@ -255,7 +255,7 @@ class RFLinkProxy:
             )
 
         try:
-            with async_timeout.timeout(CONNECTION_TIMEOUT, loop=self.loop):
+            with async_timeout.timeout(CONNECTION_TIMEOUT):
                 self.transport, self.protocol = yield from connection
 
         except (
