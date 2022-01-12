@@ -57,7 +57,7 @@ setup(
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
     package_data={"rflink": ["py.typed"]},
     install_requires=[
-        "async_timeout<4",
+        "async_timeout",
         "docopt",
         "pyserial",
         "pyserial-asyncio",
