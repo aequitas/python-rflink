@@ -392,6 +392,7 @@ translate_protocols = [
     "Oregon UVN128/138",
     "Plieger York",
     "Byron SX",
+    "CAME-TOP432",
 ]
 
 
