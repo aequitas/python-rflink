@@ -232,8 +232,8 @@ class CommandSerialization(PacketHandling):
         super().__init__(*args, **kwargs)
         if packet_callback:
             self.packet_callback = packet_callback
-        self._command_ack = asyncio.Event(loop=self.loop)
-        self._ready_to_send = asyncio.Lock(loop=self.loop)
+        self._command_ack = asyncio.Event()
+        self._ready_to_send = asyncio.Lock()
 
     def handle_response_packet(self, packet: PacketType) -> None:
         """Handle response packet."""
@@ -254,9 +254,7 @@ class CommandSerialization(PacketHandling):
 
             log.debug("waiting for acknowledgement")
             try:
-                yield from asyncio.wait_for(
-                    self._command_ack.wait(), TIMEOUT.seconds, loop=self.loop
-                )
+                yield from asyncio.wait_for(self._command_ack.wait(), TIMEOUT.seconds)
                 log.debug("packet acknowledged")
             except concurrent.futures._base.TimeoutError:
                 acknowledgement = False
