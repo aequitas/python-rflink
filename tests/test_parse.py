@@ -136,7 +136,7 @@ def test_units():
 def test_packet_valiation(packet):
     """Verify if packet validation correctly identifies official samples.
 
-    http://www.nemcon.nl/blog2/protref
+    https://www.rflink.nl/protref.php
     """
     assert valid_packet(packet)
 
