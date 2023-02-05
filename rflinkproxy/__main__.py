@@ -124,8 +124,7 @@ class RFLinkProxy:
         self.transport = None
         self.closing = False
 
-    @asyncio.coroutine
-    def handle_raw_tx_packet(self, writer, raw_packet):
+    async def handle_raw_tx_packet(self, writer, raw_packet):
         """Parse raw packet string into packet dict."""
         peer = writer.get_extra_info("peername")
         log.debug(" %s:%s: processing data: %s", peer[0], peer[1], raw_packet)
@@ -153,35 +152,33 @@ class RFLinkProxy:
                     peer[1],
                     raw_packet,
                 )
-            yield from self.forward_packet(writer, packet, raw_packet)
+            await self.forward_packet(writer, packet, raw_packet)
         else:
             log.warning(" %s:%s: no valid packet %s", peer[0], peer[1], packet)
 
-    @asyncio.coroutine
-    def forward_packet(self, writer, packet, raw_packet):
+    async def forward_packet(self, writer, packet, raw_packet):
         """Forward packet from client to RFLink."""
         peer = writer.get_extra_info("peername")
         log.debug(" %s:%s: forwarding data: %s", peer[0], peer[1], packet)
         if "command" in packet:
             packet_id = serialize_packet_id(packet)
             command = packet["command"]
-            ack = yield from self.protocol.send_command_ack(packet_id, command)
+            ack = await self.protocol.send_command_ack(packet_id, command)
             if ack:
                 writer.write("20;00;OK;".encode() + CRLF)
             for _ in range(DEFAULT_SIGNAL_REPETITIONS - 1):
-                yield from self.protocol.send_command_ack(packet_id, command)
+                await self.protocol.send_command_ack(packet_id, command)
         else:
             self.protocol.send_raw_packet(raw_packet)
 
-    @asyncio.coroutine
-    def client_connected_callback(self, reader, writer):
+    async def client_connected_callback(self, reader, writer):
         """Handle connected client."""
         peer = writer.get_extra_info("peername")
         clients.append((reader, writer, peer))
         log.info("Incoming connection from: %s:%s", peer[0], peer[1])
         try:
             while True:
-                data = yield from reader.readline()
+                data = await reader.readline()
                 if not data:
                     break
                 try:
@@ -194,7 +191,7 @@ class RFLinkProxy:
                     line = line + DELIM
 
                 if valid_packet(line):
-                    yield from self.handle_raw_tx_packet(writer, line)
+                    await self.handle_raw_tx_packet(writer, line)
                 else:
                     log.warning(
                         " %s:%s: dropping invalid data: '%s'", peer[0], peer[1], line
@@ -228,8 +225,7 @@ class RFLinkProxy:
             log.warning("disconnected from Rflink, reconnecting")
             self.loop.create_task(self.connect())
 
-    @asyncio.coroutine
-    def connect(self):
+    async def connect(self):
         """Set up connection and hook it into HA for reconnect/shutdown."""
         import serial
 
@@ -256,7 +252,7 @@ class RFLinkProxy:
 
         try:
             with async_timeout.timeout(CONNECTION_TIMEOUT):
-                self.transport, self.protocol = yield from connection
+                self.transport, self.protocol = await connection
 
         except (
             serial.serialutil.SerialException,
