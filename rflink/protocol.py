@@ -240,13 +240,12 @@ class CommandSerialization(PacketHandling):
         self._last_ack = packet
         self._command_ack.set()
 
-    @asyncio.coroutine
-    def send_command_ack(
+    async def send_command_ack(
         self, device_id: str, action: str
     ) -> Generator[Any, None, Optional[bool]]:
         """Send command, wait for gateway to repond with acknowledgment."""
         # serialize commands
-        yield from self._ready_to_send.acquire()
+        await self._ready_to_send.acquire()
         acknowledgement = None
         try:
             self._command_ack.clear()
@@ -254,7 +253,7 @@ class CommandSerialization(PacketHandling):
 
             log.debug("waiting for acknowledgement")
             try:
-                yield from asyncio.wait_for(self._command_ack.wait(), TIMEOUT.seconds)
+                await asyncio.wait_for(self._command_ack.wait(), TIMEOUT.seconds)
                 log.debug("packet acknowledged")
             except concurrent.futures._base.TimeoutError:
                 acknowledgement = False

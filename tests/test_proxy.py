@@ -13,10 +13,9 @@ def test_spawns(monkeypatch):
     asyncio.set_event_loop(loop)
 
     # setup task to stop CLI loop
-    @asyncio.coroutine
-    def stop():
+    async def stop():
         """Wait and close loop."""
-        yield from asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)
         loop.stop()
 
     if hasattr(asyncio, "ensure_future"):
