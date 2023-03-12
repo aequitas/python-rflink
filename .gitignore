@@ -59,3 +59,8 @@ ENV/
 .direnv
 
 .mypy_cache/
+
+# Devenv
+.devenv*
+devenv.local.nix
+

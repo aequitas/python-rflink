@@ -299,7 +299,6 @@ def main(argv=sys.argv[1:], loop=None):
         proxy.client_connected_callback,
         host="",
         port=listenport,
-        loop=loop,
     )
 
     server = loop.run_until_complete(server_coro)
