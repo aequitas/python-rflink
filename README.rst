@@ -31,7 +31,7 @@ https://www.rflink.nl/
 Requirements
 ------------
 
-- Python 2.7 or 3.6 (or higher)
+- Python 3.6 (or higher)
 
 Description
 -----------
