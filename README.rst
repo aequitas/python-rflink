@@ -149,20 +149,20 @@ the proxy will listen on port 2345:
 
 .. code-block::
 
-    $ rflink --port /dev/ttyACM0 --listenport 2345
+    $ rflinkproxy --port /dev/ttyACM0 --listenport 2345
 
 Share TCP mode RFLink instead of serial port (eg: ESP8266 serial bridge),
 the proxy will listen on port 2345:
 
 .. code-block::
 
-    $ rflink --host 1.2.3.4 --port 1234 --listenport 2345
+    $ rflinkproxy --host 1.2.3.4 --port 1234 --listenport 2345
 
 Debug logging is shown in verbose mode for debugging:
 
 .. code-block::
 
-    $ rflink -vv --host 1.2.3.4 --port 1234 --listenport 2345
+    $ rflinkproxy -vv --host 1.2.3.4 --port 1234 --listenport 2345
     DEBUG:asyncio:Using selector: EpollSelector
     INFO:rflinkproxy.__main__:Serving on ('0.0.0.0', 2345)
     INFO:rflinkproxy.__main__:Initiating Rflink connection
