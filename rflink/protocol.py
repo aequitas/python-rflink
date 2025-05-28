@@ -6,6 +6,7 @@
 import asyncio
 import concurrent
 import logging
+import socket
 from datetime import timedelta
 from fnmatch import fnmatchcase
 from functools import partial
@@ -13,17 +14,13 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
-    Generator,
     Optional,
     Sequence,
-    Tuple,
     Type,
     Union,
     cast,
     overload,
 )
-
-import socket
 
 from serial_asyncio_fast import create_serial_connection
 
@@ -394,7 +391,7 @@ def create_rflink_connection(
     disconnect_callback: Optional[Callable[[Optional[Exception]], None]] = None,
     ignore: Optional[Sequence[str]] = None,
     loop: Optional[asyncio.AbstractEventLoop] = None,
-) -> "Coroutine[Any, Any, Tuple[asyncio.BaseTransport, ProtocolBase]]":
+) -> "Coroutine[Any, Any, tuple[asyncio.Transport, asyncio.Protocol]]":
     """Create Rflink manager class, returns transport coroutine."""
     ...
 
@@ -411,7 +408,7 @@ def create_rflink_connection(
     disconnect_callback: Optional[Callable[[Optional[Exception]], None]] = None,
     ignore: Optional[Sequence[str]] = None,
     loop: Optional[asyncio.AbstractEventLoop] = None,
-) -> "Coroutine[Any, Any, Tuple[asyncio.BaseTransport, ProtocolBase]]":
+) -> "Coroutine[Any, Any, tuple[asyncio.Transport, asyncio.Protocol]]":
     """Create Rflink manager class, returns transport coroutine."""
     ...
 
@@ -427,7 +424,7 @@ def create_rflink_connection(
     disconnect_callback: Optional[Callable[[Optional[Exception]], None]] = None,
     ignore: Optional[Sequence[str]] = None,
     loop: Optional[asyncio.AbstractEventLoop] = None,
-) -> "Coroutine[Any, Any, Tuple[asyncio.BaseTransport, ProtocolBase]]":
+) -> "Coroutine[Any, Any, tuple[asyncio.Transport, asyncio.Protocol]]":
     """Create Rflink manager class, returns transport coroutine."""
     if loop is None:
         loop = asyncio.get_event_loop()
@@ -442,10 +439,12 @@ def create_rflink_connection(
         keepalive=keepalive,
     )
 
+    conn: Coroutine[Any, Any, tuple[asyncio.Transport, asyncio.Protocol]]
+
     # setup serial connection if no transport specified
     if host:
         conn = loop.create_connection(protocol_factory, host, cast(int, port))
     else:
-        conn = create_serial_connection(loop, protocol_factory, port, baud)
+        conn = create_serial_connection(loop, protocol_factory, str(port), baud)
 
-    return conn  # type: ignore
+    return conn

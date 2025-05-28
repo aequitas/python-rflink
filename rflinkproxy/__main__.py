@@ -21,9 +21,9 @@ import asyncio
 import logging
 import sys
 from functools import partial
+from importlib.metadata import version
 from typing import Any, Callable, Dict, cast
 
-import pkg_resources
 from docopt import docopt
 from serial_asyncio_fast import create_serial_connection
 
@@ -279,9 +279,7 @@ class RFLinkProxy:
 
 def main(argv=sys.argv[1:], loop=None):
     """Parse argument and setup main program loop."""
-    args = docopt(
-        __doc__, argv=argv, version=pkg_resources.require("rflink")[0].version
-    )
+    args = docopt(__doc__, argv=argv, version=version("rflink"))
 
     level = logging.ERROR
     if args["-v"]:
