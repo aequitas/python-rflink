@@ -9,8 +9,8 @@ from setuptools import find_packages, setup
 
 here = path.abspath(path.dirname(__file__))
 
-if sys.version_info < (3, 4):
-    raise RuntimeError("This package requires at least Python 3.4")
+if sys.version_info < (3, 9):
+    raise RuntimeError("This package requires at least Python 3.11")
 
 # Get the long description from the README file
 with open(path.join(here, "README.rst"), encoding="utf-8") as f:
@@ -57,11 +57,11 @@ setup(
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
     package_data={"rflink": ["py.typed"]},
     install_requires=[
-        "async_timeout",
         "docopt",
         "pyserial",
         "pyserial-asyncio-fast",
         'typing;python_version<"3.5"',
+        'async_timeout;python_version<"3.11"',
     ],
     # # List additional groups of dependencies here (e.g. development
     # # dependencies). You can install these using the following syntax,

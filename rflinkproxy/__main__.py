@@ -23,7 +23,6 @@ import sys
 from functools import partial
 from typing import Any, Callable, Dict, cast
 
-import async_timeout
 import pkg_resources
 from docopt import docopt
 from serial_asyncio_fast import create_serial_connection
@@ -251,8 +250,14 @@ class RFLinkProxy:
             )
 
         try:
-            with async_timeout.timeout(CONNECTION_TIMEOUT):
-                self.transport, self.protocol = await connection
+            if sys.version_info >= (3, 11):
+                async with asyncio.timeout(CONNECTION_TIMEOUT):
+                    self.transport, self.protocol = await connection
+            else:
+                import async_timeout
+
+                async with async_timeout.timeout(CONNECTION_TIMEOUT):
+                    self.transport, self.protocol = await connection
 
         except (
             serial.serialutil.SerialException,
