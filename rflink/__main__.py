@@ -23,9 +23,9 @@ Options:
 import asyncio
 import logging
 import sys
+from importlib.metadata import version
 from typing import Dict, Optional, Sequence, Type  # noqa: unused-import
 
-import pkg_resources
 from docopt import docopt
 
 from .protocol import (  # noqa: unused-import
@@ -54,9 +54,7 @@ def main(
     argv: Sequence[str] = sys.argv[1:], loop: Optional[asyncio.AbstractEventLoop] = None
 ) -> None:
     """Parse argument and setup main program loop."""
-    args = docopt(
-        __doc__, argv=argv, version=pkg_resources.require("rflink")[0].version
-    )
+    args = docopt(__doc__, argv=argv, version=version("rflink"))
 
     level = logging.ERROR
     if args["-v"]:
