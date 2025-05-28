@@ -2,7 +2,7 @@
 
 import asyncio
 
-from serial_asyncio import SerialTransport
+from serial_asyncio_fast import SerialTransport
 
 from rflink.__main__ import main
 

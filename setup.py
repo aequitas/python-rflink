@@ -60,7 +60,7 @@ setup(
         "async_timeout",
         "docopt",
         "pyserial",
-        "pyserial-asyncio",
+        "pyserial-asyncio-fast",
         'typing;python_version<"3.5"',
     ],
     # # List additional groups of dependencies here (e.g. development
