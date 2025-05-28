@@ -26,7 +26,7 @@ from typing import Any, Callable, Dict, cast
 import async_timeout
 import pkg_resources
 from docopt import docopt
-from serial_asyncio import create_serial_connection
+from serial_asyncio_fast import create_serial_connection
 
 from rflink.parser import (
     DELIM,

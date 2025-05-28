@@ -25,7 +25,7 @@ from typing import (
 
 import socket
 
-from serial_asyncio import create_serial_connection
+from serial_asyncio_fast import create_serial_connection
 
 from .parser import (
     PacketType,
@@ -59,7 +59,7 @@ class ProtocolBase(asyncio.Protocol):
         loop: Optional[asyncio.AbstractEventLoop] = None,
         disconnect_callback: Optional[Callable[[Optional[Exception]], None]] = None,
         keepalive: Optional[int] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """Initialize class."""
         if loop:
@@ -160,7 +160,7 @@ class PacketHandling(ProtocolBase):
         self,
         *args: Any,
         packet_callback: Optional[Callable[[PacketType], None]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """Add packethandling specific initialization.
 
@@ -226,7 +226,7 @@ class CommandSerialization(PacketHandling):
         self,
         *args: Any,
         packet_callback: Optional[Callable[[PacketType], None]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """Add packethandling specific initialization."""
         super().__init__(*args, **kwargs)
@@ -282,7 +282,7 @@ class EventHandling(PacketHandling):
         *args: Any,
         event_callback: Optional[Callable[[PacketType], None]] = None,
         ignore: Optional[Sequence[str]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """Add eventhandling specific initialization."""
         super().__init__(*args, **kwargs)
