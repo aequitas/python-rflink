@@ -10,6 +10,10 @@
       devShell = pkgs.mkShell {
         buildInputs = with pkgs; [
           python3Packages.tox
+          python39
+          python310
+          python311
+          python312
         ];
       };
     }

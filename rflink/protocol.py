@@ -240,9 +240,7 @@ class CommandSerialization(PacketHandling):
         self._last_ack = packet
         self._command_ack.set()
 
-    async def send_command_ack(
-        self, device_id: str, action: str
-    ) -> Generator[Any, None, Optional[bool]]:
+    async def send_command_ack(self, device_id: str, action: str) -> "bool | None":
         """Send command, wait for gateway to repond with acknowledgment."""
         # serialize commands
         await self._ready_to_send.acquire()
