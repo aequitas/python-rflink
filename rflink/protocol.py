@@ -7,6 +7,8 @@ import asyncio
 import concurrent
 import logging
 import socket
+
+from rflink.asyncio_utils import get_or_create_event_loop
 from datetime import timedelta
 from fnmatch import fnmatchcase
 from functools import partial
@@ -59,10 +61,7 @@ class ProtocolBase(asyncio.Protocol):
         **kwargs: Any,
     ) -> None:
         """Initialize class."""
-        if loop:
-            self.loop = loop
-        else:
-            self.loop = asyncio.get_event_loop()
+        self.loop = get_or_create_event_loop(loop)
         self.packet = ""
         self.buffer = ""
         self.packet_callback = None  # type: Optional[Callable[[PacketType], None]]
@@ -426,8 +425,7 @@ def create_rflink_connection(
     loop: Optional[asyncio.AbstractEventLoop] = None,
 ) -> "Coroutine[Any, Any, tuple[asyncio.Transport, asyncio.Protocol]]":
     """Create Rflink manager class, returns transport coroutine."""
-    if loop is None:
-        loop = asyncio.get_event_loop()
+    loop = get_or_create_event_loop(loop)
     # use default protocol if not specified
     protocol_factory = partial(
         protocol,
