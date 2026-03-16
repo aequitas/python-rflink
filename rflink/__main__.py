@@ -28,6 +28,8 @@ from typing import Dict, Optional, Sequence, Type  # noqa: unused-import
 
 from docopt import docopt
 
+from rflink.asyncio_utils import get_or_create_event_loop
+
 from .protocol import (  # noqa: unused-import
     CommandSerialization,
     EventHandling,
@@ -63,8 +65,7 @@ def main(
         level = logging.DEBUG
     logging.basicConfig(level=level)
 
-    if not loop:
-        loop = asyncio.get_event_loop()
+    loop = get_or_create_event_loop(loop)
 
     if args["--ignore"]:
         ignore = args["--ignore"].split(",")
