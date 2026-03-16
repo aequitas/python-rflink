@@ -27,6 +27,7 @@ from typing import Any, Callable, Dict, cast
 from docopt import docopt
 from serial_asyncio_fast import create_serial_connection
 
+from rflink.asyncio_utils import get_or_create_event_loop
 from rflink.parser import (
     DELIM,
     PacketHeader,
@@ -288,8 +289,7 @@ def main(argv=sys.argv[1:], loop=None):
         level = logging.DEBUG
     logging.basicConfig(level=level)
 
-    if not loop:
-        loop = asyncio.get_event_loop()
+    loop = get_or_create_event_loop(loop)
 
     host = args["--host"]
     port = args["--port"]
